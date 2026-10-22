@@ -9,6 +9,8 @@ Le core fournit un modèle générique capable de représenter les fiches, objet
 
 Le core ne calcule rien à la place du MJ : il stocke, valide la structure des données, synchronise et affiche.
 
+N'importe qui peut créer un module pour son système de jeu, à la manière des systèmes Foundry VTT, sans logique de calcul.
+
 ## 2. Décisions
 
 | # | Sujet | Statut | Décision |
@@ -18,6 +20,11 @@ Le core ne calcule rien à la place du MJ : il stocke, valide la structure des d
 | D3 | Valeurs riches | **Décidé** | Les valeurs sont des modèles objet. Le core définit les types de valeurs, qui portent leur fonctionnement (opérations, invariants) et leur état. |
 | D4 | Element dans le core | **Décidé** | `Element` est une classe générique du core. |
 | D5 | Modules déclaratifs | **Décidé** | Un type comme « PJ » est une **déclaration** du module (données), pas une sous-classe Kotlin. Les modules ne contiennent pas de code compilé. |
+| D6 | Modules tiers | **Décidé** | N'importe qui peut créer un module de système de jeu (ex. Pathfinder) : schémas, types de personnages, d'objets, de compétences, bibliothèque de contenus **et interfaces** (layout, style, boutons et leurs actions). Le core interprète le module, côté MJ comme côté mobile. |
+| D7 | Modèle de référence | **Décidé** | Inspiré des systèmes Foundry VTT, en moins poussé : pas de logique de calcul ni d'automatisation. |
+| P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
+| P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
+| P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
 | P1 | Trois niveaux | Proposé | Type (`Kind`, fourni par le module) → définition (`Blueprint`, compendium) → instance (`Element`, monde). |
 | P2 | Modèle unifié | Proposé | Une seule structure (`Element`) ; la distinction « Actor / Item » est un **rôle** porté par le `Kind`, pas deux modèles distincts. |
 | P3 | Slots et attributs de lien | Proposé | Les enfants sont rangés dans des slots typés (inventaire, sorts, capacités…). Les attributs de la relation (équipé, préparé, quantité) sont portés par le `Placement`, pas par l'objet. |
@@ -99,7 +106,7 @@ flowchart LR
 ```
 
 - **Core** : code Kotlin écrit une seule fois.
-- **Module** : données exprimées avec les types du core, chargeables à chaud (contrainte iOS : pas de code téléchargé exécutable).
+- **Module** : données exprimées avec les types du core, téléchargeables depuis le serveur du MJ (contrainte iOS et politiques des stores : pas de code compilé téléchargé). Peut être écrit par un tiers (voir section 9).
 - **Apps** : ne connaissent que le core. Elles affichent une fiche PJ sans savoir ce qu'est un PJ, en lisant les `FieldDef`, `SlotDef` et layouts du module.
 
 Exemple de déclaration côté module (le DSL n'est qu'un outil d'écriture, le résultat est sérialisé) :
@@ -333,16 +340,190 @@ Apports attendus :
 - **Historique** lisible (« Thorin : −5 PV par le MJ »), undo, rejeu à la reconnexion.
 - **Application optimiste** côté mobile avec la même fonction pure que le serveur.
 
-## 9. Composants à prévoir (proposé)
+## 9. Modules de système de jeu
+
+### 9.1 Principe
+
+Un module est un **paquet de données** interprété par le core. Il contient tout ce qui est propre à un système de jeu, interface comprise. Le core fournit un vocabulaire fermé (types de valeurs, primitives de layout, widgets, opérations, tokens de style) ; les auteurs de modules composent avec.
+
+Pourquoi pas de code dans les modules :
+
+- une fonction `@Composable` est du code compilé, elle ne peut pas être transmise comme donnée ;
+- iOS interdit l'exécution de code natif téléchargé, et les stores encadrent strictement le code téléchargé ;
+- un module venant d'un tiers s'exécute sur le téléphone de chaque joueur : un module déclaratif est **sûr par construction**.
+
+Le principe « pas de règles » rend cette approche réaliste : ce qui exigerait du vrai code (valeurs dérivées, automatisation, résolution d'effets) est hors périmètre.
+
+### 9.2 Correspondance avec Foundry VTT
+
+| Foundry VTT | Jdr Assistant | Remarque |
+|---|---|---|
+| `system.json` (manifeste) | `module.json` | id, version, compatibilité core, dépendances |
+| `template.json` / DataModels | `kinds/*.json` | Kinds avec FieldDef et SlotDef |
+| Compendium packs | `compendium/*.json` | Blueprints (armes, sorts, monstres…) |
+| Templates Handlebars | `layouts/*.json` | Arbres de `LayoutNode` |
+| CSS | `theme.json` + `assets/` | Tokens, variantes, polices, icônes |
+| `lang/*.json` | `i18n/*.json` | Libellés traduisibles |
+| JS : logique de fiche | `actions` dans les layouts | Listes d'opérations déclaratives |
+| JS : calculs, automatisation | — | Exclus par principe |
+
+### 9.3 Structure d'un paquet (proposé)
+
+```
+pf2e/
+├── module.json
+├── kinds/
+│   ├── character.json
+│   ├── npc.json
+│   ├── weapon.json
+│   ├── spell.json
+│   └── feat.json
+├── compendium/
+│   ├── weapons.json
+│   ├── spells.json
+│   └── ancestries.json
+├── layouts/
+│   ├── character.sheet.json
+│   ├── weapon.compact.json
+│   └── weapon.detail.json
+├── theme.json
+├── i18n/
+│   ├── fr.json
+│   └── en.json
+└── assets/
+    ├── fonts/
+    └── icons/
+```
+
+Manifeste d'un système :
+
+```json
+{
+  "id": "pf2e",
+  "type": "system",
+  "title": "Pathfinder 2e",
+  "version": "1.2.0",
+  "authors": ["…"],
+  "compatibility": { "core": { "minimum": "1.0", "verified": "1.3" } },
+  "languages": ["fr", "en"],
+  "dependencies": []
+}
+```
+
+Manifeste d'une extension (homebrew d'une table) :
+
+```json
+{
+  "id": "homebrew-table-jeudi",
+  "type": "extension",
+  "title": "Homebrew de la table du jeudi",
+  "version": "0.3.0",
+  "compatibility": { "core": { "minimum": "1.0" } },
+  "dependencies": [{ "id": "pf2e", "version": ">=1.2" }]
+}
+```
+
+### 9.4 Interface déclarative (proposé)
+
+L'interface d'un module combine :
+
+- **Layout** : arbre de `LayoutNode` (colonne, ligne, grille, onglets, section, champ, liste d'un slot, libellé…) ;
+- **Style** : tokens de thème (couleurs, typographies, arrondis), variantes de composants, assets ;
+- **Actions** : listes d'opérations paramétrées, déclenchées par un bouton ;
+- **Conditions** : affichage conditionnel (« si `isSpellcaster` ») ;
+- **Entrées** : saisie utilisateur réinjectée dans une opération (« demander n, puis `Damage(n)` ») ;
+- **Indices d'affichage** (`DisplayHint`) : une `Resource` en barre ou en pastilles, etc.
+
+Chaque Kind d'Item peut fournir plusieurs layouts (`compact` pour une liste, `detail` pour une vue complète).
+
+```json
+{
+  "type": "Button",
+  "label": "Repos long",
+  "style": "primary",
+  "confirm": "Effectuer un repos long ?",
+  "actions": [
+    { "op": "Resource.Reset", "field": "hp" },
+    { "op": "Resource.Reset", "field": "spellSlots.*" },
+    { "op": "Resource.Recover", "field": "hitDice", "fraction": 0.5 },
+    { "op": "Notify", "to": "gm", "message": "{name} prend un repos long" }
+  ]
+}
+```
+
+Côté app, un **interpréteur unique** en Compose Multiplatform (PC MJ et mobile) transforme ces descriptions en composables :
+
+```kotlin
+@Serializable
+sealed interface LayoutNode {
+    data class Column(val children: List<LayoutNode>) : LayoutNode
+    data class Row(val children: List<LayoutNode>) : LayoutNode
+    data class Grid(val columns: Int, val children: List<LayoutNode>) : LayoutNode
+    data class Tabs(val tabs: List<Tab>) : LayoutNode
+    data class Section(val title: String, val children: List<LayoutNode>) : LayoutNode
+    data class Field(val key: String, val display: DisplayHint? = null) : LayoutNode
+    data class SlotList(val slot: String, val itemLayout: LayoutRef, val groupBy: String? = null) : LayoutNode
+    data class Button(val label: String, val style: String?, val actions: List<ActionDef>) : LayoutNode
+    data class Label(val text: String) : LayoutNode
+}
+
+@Composable
+fun Render(node: LayoutNode, ctx: SheetContext) {
+    when (node) {
+        is LayoutNode.Column -> Column { node.children.forEach { Render(it, ctx) } }
+        is LayoutNode.Field -> FieldWidget(ctx.def(node.key), ctx.value(node.key), node.display, ctx::dispatch)
+        is LayoutNode.Button -> ThemedButton(node.label, node.style) { ctx.run(node.actions) }
+        // …
+    }
+}
+```
+
+Chaque `ValueType` du core est associé à un widget écrit une fois dans l'app. Les widgets émettent des `Operation`, le flux de validation et de journalisation (section 8) reste inchangé.
+
+### 9.5 Distribution (proposé)
+
+Les modules ne passent pas par un store : ils voyagent du serveur PC du MJ vers les mobiles. Le QR code reste minimal (adresse du serveur, id de campagne, secret d'appairage) ; la liste des modules est obtenue après connexion.
+
+```mermaid
+sequenceDiagram
+    participant M as Mobile joueur
+    participant S as Serveur PC (MJ)
+
+    M->>M: Scan du QR code (adresse, campagne, secret)
+    M->>S: Connexion + version de l'app et du core
+    S-->>M: Manifeste de campagne (id, version, hash de chaque module)
+    M->>M: Comparaison avec le cache local
+    loop Modules manquants ou modifiés
+        M->>S: Téléchargement du paquet
+        S-->>M: Paquet du module
+    end
+    M->>M: Validation et chargement des modules
+    M->>S: Prêt, abonnement aux projections
+```
+
+### 9.6 Outillage pour les auteurs (proposé)
+
+- **JSON Schema** publiés pour chaque type de fichier, générés depuis les classes sérialisables du core : autocomplétion et validation dans l'IDE de l'auteur.
+- **Validation stricte au chargement** avec des erreurs lisibles (fichier, chemin, cause).
+- Plus tard : **rechargement à chaud** dans l'app PC pendant l'écriture d'un module, puis un **éditeur de modules** pour les MJ non développeurs.
+
+### 9.7 Niveaux d'extensibilité
+
+1. **Déclaratif** (socle) : tous les modules, toutes les plateformes.
+2. **Écrans compilés dans l'app** (`Custom`) : possibles pour des modules officiels, avec repli générique ; non accessibles aux tiers.
+3. **Script interprété en sandbox** (ex. Redwood/Treehouse) : porte de sortie éventuelle si le déclaratif atteint ses limites, à condition que le script ne produise que des widgets du catalogue et n'émette que des opérations.
+
+## 10. Composants à prévoir (proposé)
 
 - **Visibilité / permissions** par champ et par instance (objet non identifié, piège caché) ; le mobile ne reçoit jamais l'état complet.
 - **Compendium** : stockage des Blueprints (module + homebrew).
 - **Monde / campagne** : conteneur des instances, frontière de sauvegarde et de sync.
 - **Adressage** stable (`elementId` + chemin de champ) pour le ping.
-- **Layout** séparé du schéma.
-- **Format du paquet de module** : manifeste (id, version, version du core visée, dépendances) et migrations des Kinds.
+- **Layout** séparé du schéma (voir section 9.4).
+- **Migrations** : évolution des Kinds d'une version de module à l'autre et migration des instances existantes.
+- **Versioning du format** : chaque version du core annonce les versions du format de module qu'elle sait lire.
 
-## 10. Questions ouvertes
+## 11. Questions ouvertes
 
 1. **Noms définitifs** : `Kind` / `Blueprint` / `Element`, rôles `Actor` / `Item` ?
 2. **Définition → instance** : copie complète (snapshot + provenance) ou prototype (l'instance ne stocke que ses overrides) ? Impacte le stockage, la sync et la propagation d'un homebrew modifié.
@@ -352,3 +533,7 @@ Apports attendus :
 6. **Monnaie** : groupe de `Number` sur l'Actor ou objets empilables transférables ?
 7. **Permissions d'écriture** : quels champs un joueur peut-il modifier lui-même ?
 8. **Cas limites** hors périmètre initial : forme sauvage / métamorphose.
+9. **Vocabulaire UI** : liste exacte des primitives de layout, widgets, opérations d'action et tokens de style de la v1.
+10. **Format des fichiers de module** : JSON uniquement, ou YAML accepté pour faciliter l'écriture ?
+11. **Écrans `Custom`** : les conserver pour les modules officiels, ou tout faire passer par le déclaratif pour garantir l'égalité entre modules officiels et tiers ?
+12. **Sécurité** : vérification ou signature des modules transmis par le serveur du MJ ?
