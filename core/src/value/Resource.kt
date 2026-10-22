@@ -1,6 +1,31 @@
 package com.estebandacosta.jdrassistant.core.value
 
 /**
+ * Configuration d'un champ ressource, déclarée par le module et partagée par toutes les instances.
+ *
+ * @property min plancher de `current` ; peut être négatif.
+ */
+data class ResourceType(
+    val min: Int = 0,
+) {
+    /** Applique [op] à [state] et renvoie le nouvel état. */
+    fun evolve(state: ResourceValue, op: ResourceOp): ResourceValue = when (op) {
+        is ResourceOp.Damage -> {
+            val fromTemp = minOf(op.amount, state.temp)
+            val fromCurrent = op.amount - fromTemp
+            state.copy(
+                current = (state.current - fromCurrent).coerceAtLeast(min),
+                temp = state.temp - fromTemp,
+            )
+        }
+        is ResourceOp.Heal -> state.copy(current = (state.current + op.amount).coerceAtMost(state.max))
+        is ResourceOp.SetTemp -> state.copy(temp = op.amount)
+        is ResourceOp.SetMax -> state.copy(max = op.max, current = state.current.coerceAtMost(op.max))
+        ResourceOp.Reset -> state.copy(current = state.max, temp = 0)
+    }
+}
+
+/**
  * État d'une ressource consommable (PV, charges, emplacements de sorts).
  * Immuable : chaque opération produit un nouvel état.
  */
@@ -26,20 +51,4 @@ sealed interface ResourceOp {
 
     /** Remet le courant au max et vide le temporaire. */
     data object Reset : ResourceOp
-}
-
-/** Applique [op] et renvoie le nouvel état. */
-fun ResourceValue.apply(op: ResourceOp): ResourceValue = when (op) {
-    is ResourceOp.Damage -> {
-        val fromTemp = minOf(op.amount, temp)
-        val fromCurrent = op.amount - fromTemp
-        copy(
-            current = (current - fromCurrent).coerceAtLeast(0),
-            temp = temp - fromTemp,
-        )
-    }
-    is ResourceOp.Heal -> copy(current = (current + op.amount).coerceAtMost(max))
-    is ResourceOp.SetTemp -> copy(temp = op.amount)
-    is ResourceOp.SetMax -> copy(max = op.max, current = current.coerceAtMost(op.max))
-    ResourceOp.Reset -> copy(current = max, temp = 0)
 }
