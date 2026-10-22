@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
@@ -31,6 +30,7 @@ import com.estebandacosta.jdrassistant.components.Diamond
 import com.estebandacosta.jdrassistant.components.JdrText
 import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrTheme
+import com.estebandacosta.jdrassistant.theme.vignetteGround
 
 /** Écran d'accueil du MJ : créer un nouveau monde ou en ouvrir un existant. */
 @Composable
@@ -39,16 +39,7 @@ fun HomeScreen(onCreateWorld: () -> Unit, onOpenWorld: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(colors.ground)
-            .drawBehind {
-                drawRect(
-                    Brush.radialGradient(
-                        0.5f to Color.Transparent,
-                        1f to colors.vignette.copy(alpha = 0.75f),
-                        radius = size.maxDimension * 0.75f,
-                    ),
-                )
-            },
+            .vignetteGround(colors),
     ) {
         AppHeader()
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {

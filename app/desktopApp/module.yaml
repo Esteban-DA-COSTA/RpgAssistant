@@ -5,6 +5,7 @@ dependencies:
   - //server
   - $compose.desktop.currentOs
   - $compose.foundation
+  - $compose.material3
   - $compose.preview
   - $libs.arrow.core
   - $libs.filekit.dialogs.compose
