@@ -8,19 +8,19 @@ import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError
 import com.estebandacosta.jdrassistant.core.element.FieldOp
-import com.estebandacosta.jdrassistant.core.value.ResourceType
+import com.estebandacosta.jdrassistant.core.value.ValueType
 
 /** Schéma d'un type d'élément déclaré par un module : ses champs et leur type. */
 data class Kind(
     val id: KindId,
-    val fields: Map<String, ResourceType>,
+    val fields: Map<String, ValueType>,
 ) {
     /** Valide [fieldOp] sur [element] ; renvoie l'opération acceptée, ou la raison du refus. */
     fun decide(element: Element, fieldOp: FieldOp): Either<ElementError, FieldOp> = either {
         ensure(element.kind == id) { ElementError.KindMismatch(expected = id, actual = element.kind) }
         val type = ensureNotNull(fields[fieldOp.field]) { ElementError.UnknownField(fieldOp.field) }
-        ensure(fieldOp.field in element.values) { ElementError.MissingValue(fieldOp.field) }
-        type.decide(fieldOp.op).mapLeft { ElementError.InvalidOperation(fieldOp.field, it) }.bind()
+        val value = ensureNotNull(element.values[fieldOp.field]) { ElementError.MissingValue(fieldOp.field) }
+        type.decide(value, fieldOp.op).mapLeft { ElementError.InvalidOperation(fieldOp.field, it) }.bind()
         fieldOp
     }
 

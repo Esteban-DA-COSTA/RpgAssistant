@@ -7,6 +7,7 @@ import com.estebandacosta.jdrassistant.core.value.ResourceOp.SetMax
 import com.estebandacosta.jdrassistant.core.value.ResourceOp.SetTemp
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class ResourceTest {
 
@@ -76,5 +77,10 @@ class ResourceTest {
     fun `a history of operations replays with fold`() {
         val history = listOf(Damage(10), Heal(4), SetTemp(5), Damage(7))
         assertEquals(ResourceValue(current = 4, max = 20, temp = 0), history.fold(hp, type::evolve))
+    }
+
+    @Test
+    fun `evolve rejects an operation that decide would have refused`() {
+        assertFailsWith<IllegalStateException> { type.evolve(hp, FlagOp.Set(true)) }
     }
 }

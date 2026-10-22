@@ -9,6 +9,9 @@ import com.estebandacosta.jdrassistant.core.element.ElementError.KindMismatch
 import com.estebandacosta.jdrassistant.core.element.ElementError.MissingValue
 import com.estebandacosta.jdrassistant.core.element.ElementError.UnknownField
 import com.estebandacosta.jdrassistant.core.element.FieldOp
+import com.estebandacosta.jdrassistant.core.value.FlagOp
+import com.estebandacosta.jdrassistant.core.value.FlagType
+import com.estebandacosta.jdrassistant.core.value.FlagValue
 import com.estebandacosta.jdrassistant.core.value.ResourceError.NegativeAmount
 import com.estebandacosta.jdrassistant.core.value.ResourceError.TempNotAllowed
 import com.estebandacosta.jdrassistant.core.value.ResourceOp.Damage
@@ -16,6 +19,8 @@ import com.estebandacosta.jdrassistant.core.value.ResourceOp.Heal
 import com.estebandacosta.jdrassistant.core.value.ResourceOp.SetTemp
 import com.estebandacosta.jdrassistant.core.value.ResourceType
 import com.estebandacosta.jdrassistant.core.value.ResourceValue
+import com.estebandacosta.jdrassistant.core.value.ValueError.OpMismatch
+import com.estebandacosta.jdrassistant.core.value.ValueError.ValueMismatch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -27,6 +32,7 @@ class KindTest {
         fields = mapOf(
             "hp" to ResourceType(allowTemp = true),
             "hitDice" to ResourceType(),
+            "inspiration" to FlagType,
         ),
     )
     private val thorin = Element(
@@ -34,6 +40,7 @@ class KindTest {
         values = mapOf(
             "hp" to ResourceValue(current = 12, max = 20),
             "hitDice" to ResourceValue(current = 3, max = 5),
+            "inspiration" to FlagValue(false),
         ),
     )
 
@@ -93,5 +100,25 @@ class KindTest {
         val after = history.fold(thorin, pc::evolve)
         assertEquals(ResourceValue(current = 5, max = 20), after.values["hp"])
         assertEquals(ResourceValue(current = 4, max = 5), after.values["hitDice"])
+    }
+
+    @Test
+    fun `a flag field evolves through its own type`() {
+        val op = FieldOp("inspiration", FlagOp.Set(true))
+        val after = pc.decide(thorin, op).map { pc.evolve(thorin, it) }
+        assertEquals(FlagValue(true), after.getOrNull()?.values?.get("inspiration"))
+    }
+
+    @Test
+    fun `an operation of the wrong type for the field is refused`() {
+        val expected = InvalidOperation("hp", OpMismatch(FlagOp.Set(true)))
+        assertEquals(expected.left(), pc.decide(thorin, FieldOp("hp", FlagOp.Set(true))))
+    }
+
+    @Test
+    fun `a value stored under the wrong type is refused`() {
+        val corrupted = thorin.copy(values = thorin.values + ("hitDice" to FlagValue(true)))
+        val expected = InvalidOperation("hitDice", ValueMismatch(FlagValue(true)))
+        assertEquals(expected.left(), pc.decide(corrupted, FieldOp("hitDice", Heal(1))))
     }
 }

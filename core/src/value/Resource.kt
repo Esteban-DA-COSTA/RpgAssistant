@@ -13,9 +13,10 @@ import arrow.core.raise.ensure
 data class ResourceType(
     val min: Int = 0,
     val allowTemp: Boolean = false,
-) {
-    /** Valide [op] ; renvoie l'opération acceptée, ou la raison du refus. */
-    fun decide(op: ResourceOp): Either<ResourceError, ResourceOp> = either {
+) : ValueType {
+    override fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp> = either {
+        ensure(value is ResourceValue) { ValueError.ValueMismatch(value) }
+        ensure(op is ResourceOp) { ValueError.OpMismatch(op) }
         when (op) {
             is ResourceOp.Damage -> ensure(op.amount >= 0) { ResourceError.NegativeAmount(op.amount) }
             is ResourceOp.Heal -> ensure(op.amount >= 0) { ResourceError.NegativeAmount(op.amount) }
@@ -29,23 +30,22 @@ data class ResourceType(
         op
     }
 
-    /**
-     * Applique [op] à [state] et renvoie le nouvel état.
-     * Ne valide rien : [op] doit avoir été acceptée par [decide].
-     */
-    fun evolve(state: ResourceValue, op: ResourceOp): ResourceValue = when (op) {
-        is ResourceOp.Damage -> {
-            val fromTemp = minOf(op.amount, state.temp)
-            val fromCurrent = op.amount - fromTemp
-            state.copy(
-                current = (state.current - fromCurrent).coerceAtLeast(min),
-                temp = state.temp - fromTemp,
-            )
+    override fun evolve(value: FieldValue, op: ValueOp): FieldValue {
+        check(value is ResourceValue && op is ResourceOp) { "Opération non validée : $op sur $value" }
+        return when (op) {
+            is ResourceOp.Damage -> {
+                val fromTemp = minOf(op.amount, value.temp)
+                val fromCurrent = op.amount - fromTemp
+                value.copy(
+                    current = (value.current - fromCurrent).coerceAtLeast(min),
+                    temp = value.temp - fromTemp,
+                )
+            }
+            is ResourceOp.Heal -> value.copy(current = (value.current + op.amount).coerceAtMost(value.max))
+            is ResourceOp.SetTemp -> value.copy(temp = op.amount)
+            is ResourceOp.SetMax -> value.copy(max = op.max, current = value.current.coerceAtMost(op.max))
+            ResourceOp.Reset -> value.copy(current = value.max, temp = 0)
         }
-        is ResourceOp.Heal -> state.copy(current = (state.current + op.amount).coerceAtMost(state.max))
-        is ResourceOp.SetTemp -> state.copy(temp = op.amount)
-        is ResourceOp.SetMax -> state.copy(max = op.max, current = state.current.coerceAtMost(op.max))
-        ResourceOp.Reset -> state.copy(current = state.max, temp = 0)
     }
 }
 
@@ -57,10 +57,10 @@ data class ResourceValue(
     val current: Int,
     val max: Int,
     val temp: Int = 0,
-)
+) : FieldValue
 
 /** Opérations possibles sur une [ResourceValue]. */
-sealed interface ResourceOp {
+sealed interface ResourceOp : ValueOp {
     /** Retire [amount] points, en consommant d'abord le temporaire. */
     data class Damage(val amount: Int) : ResourceOp
 
@@ -77,8 +77,8 @@ sealed interface ResourceOp {
     data object Reset : ResourceOp
 }
 
-/** Raisons pour lesquelles [ResourceType.decide] refuse une opération. */
-sealed interface ResourceError {
+/** Raisons propres aux ressources pour lesquelles [ResourceType.decide] refuse une opération. */
+sealed interface ResourceError : ValueError {
     /** Un montant doit être positif ou nul. */
     data class NegativeAmount(val amount: Int) : ResourceError
 
