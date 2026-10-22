@@ -8,6 +8,7 @@ dependencies:
   - $compose.preview
   - $libs.arrow.core
   - $libs.filekit.dialogs.compose
+  - $kotlin.serialization.json
   - $libs.kotlinx.coroutines.swing
   - $libs.logback.classic
 
@@ -16,5 +17,7 @@ test-dependencies:
 
 settings:
   compose: enabled
+  kotlin:
+    serialization: enabled
   jvm:
     mainClass: com.estebandacosta.jdrassistant.MainKt

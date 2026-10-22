@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,8 @@ import com.estebandacosta.jdrassistant.components.GemButton
 import com.estebandacosta.jdrassistant.components.JdrButton
 import com.estebandacosta.jdrassistant.components.JdrText
 import com.estebandacosta.jdrassistant.components.Separator
+import com.estebandacosta.jdrassistant.storage.WorldStorage
+import com.estebandacosta.jdrassistant.storage.WorldStorageError
 import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrColors
 import com.estebandacosta.jdrassistant.theme.JdrTheme
@@ -52,13 +55,16 @@ import com.estebandacosta.jdrassistant.theme.panel
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
+import kotlinx.coroutines.launch
 import java.nio.file.Path
 
-/** Modale de création d'un monde : [onCreate] reçoit le monde validé, [onDismiss] ferme sans rien créer. */
+/** Modale de création d'un monde : [onCreated] reçoit l'archive `.rpga` écrite, [onDismiss] ferme sans rien créer. */
 @Composable
-fun CreateWorldDialog(onDismiss: () -> Unit, onCreate: (NewWorld) -> Unit) {
+fun CreateWorldDialog(onDismiss: () -> Unit, onCreated: (Path) -> Unit) {
     var form by remember { mutableStateOf(CreateWorldForm()) }
     var errors by remember { mutableStateOf(emptySet<CreateWorldError>()) }
+    var storageError by remember { mutableStateOf<WorldStorageError?>(null) }
+    val scope = rememberCoroutineScope()
     val directoryPicker = rememberDirectoryPickerLauncher(
         directory = form.location?.let { PlatformFile(it.toFile()) },
         dialogSettings = FileKitDialogSettings(title = "Emplacement du monde", parent = LocalDialogParent.current),
@@ -66,6 +72,7 @@ fun CreateWorldDialog(onDismiss: () -> Unit, onCreate: (NewWorld) -> Unit) {
         if (picked != null) {
             form = form.copy(location = picked.file.toPath())
             errors -= CreateWorldError.MissingLocation
+            storageError = null
         }
     }
     Dialog(
@@ -74,22 +81,49 @@ fun CreateWorldDialog(onDismiss: () -> Unit, onCreate: (NewWorld) -> Unit) {
     ) {
         CreateWorldCard(
             form = form,
-            errors = errors,
+            nameError = nameErrorMessage(errors, storageError),
+            locationError = locationErrorMessage(errors, storageError),
             onNameChange = {
                 form = form.copy(name = it)
-                errors -= CreateWorldError.BlankName
+                errors = errors.filterNot { error -> error is CreateWorldError.Name }.toSet()
+                storageError = null
             },
             onBrowse = { directoryPicker.launch() },
             onCancel = onDismiss,
-            onSubmit = { form.validate().fold({ errors = it.toSet() }, onCreate) },
+            onSubmit = {
+                form.validate().fold(
+                    { errors = it.toSet() },
+                    { world -> scope.launch { WorldStorage.create(world).fold({ storageError = it }, onCreated) } },
+                )
+            },
         )
     }
 }
 
+private fun nameErrorMessage(errors: Set<CreateWorldError>, storageError: WorldStorageError?): String? =
+    if (storageError is WorldStorageError.AlreadyExists) {
+        "Un monde « ${storageError.archive.fileName} » existe déjà dans ce dossier."
+    } else {
+        when (val error = errors.filterIsInstance<CreateWorldError.Name>().firstOrNull()) {
+            CreateWorldError.BlankName -> "Donnez un nom à votre monde."
+            is CreateWorldError.ForbiddenCharacters ->
+                "Un nom de fichier ne peut pas contenir : ${error.characters.joinToString(" ")}"
+            null -> null
+        }
+    }
+
+private fun locationErrorMessage(errors: Set<CreateWorldError>, storageError: WorldStorageError?): String? =
+    when {
+        storageError is WorldStorageError.WriteFailed -> "Impossible d'écrire dans ce dossier."
+        CreateWorldError.MissingLocation in errors -> "Choisissez le dossier où enregistrer le monde."
+        else -> null
+    }
+
 @Composable
 private fun CreateWorldCard(
     form: CreateWorldForm,
-    errors: Set<CreateWorldError>,
+    nameError: String?,
+    locationError: String?,
     onNameChange: (String) -> Unit,
     onBrowse: () -> Unit,
     onCancel: () -> Unit,
@@ -114,14 +148,14 @@ private fun CreateWorldCard(
             FormField(
                 label = "Nom du monde",
                 hint = null,
-                error = "Donnez un nom à votre monde.".takeIf { CreateWorldError.BlankName in errors },
+                error = nameError,
             ) {
                 NameInput(form.name, onNameChange)
             }
             FormField(
                 label = "Emplacement des données",
-                hint = "Le monde et toutes ses fiches seront enregistrés dans ce dossier.",
-                error = "Choisissez le dossier où enregistrer le monde.".takeIf { CreateWorldError.MissingLocation in errors },
+                hint = "Le monde et toutes ses fiches seront enregistrés dans ce dossier, en un seul fichier .rpga.",
+                error = locationError,
             ) {
                 LocationInput(form.location, onBrowse)
             }

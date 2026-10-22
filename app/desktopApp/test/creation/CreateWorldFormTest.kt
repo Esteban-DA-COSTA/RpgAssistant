@@ -36,6 +36,22 @@ class CreateWorldFormTest {
     }
 
     @Test
+    fun `un nom contenant des caractères interdits dans un nom de fichier les signale tous`() {
+        assertEquals(
+            nonEmptyListOf(CreateWorldError.ForbiddenCharacters(setOf('/', ':', '?'))).left(),
+            CreateWorldForm(name = "Valdor/Est : la suite ?", location = documents).validate(),
+        )
+    }
+
+    @Test
+    fun `un nom interdit et un emplacement manquant sont signalés ensemble`() {
+        assertEquals(
+            nonEmptyListOf(CreateWorldError.ForbiddenCharacters(setOf('*')), CreateWorldError.MissingLocation).left(),
+            CreateWorldForm(name = "Valdor*").validate(),
+        )
+    }
+
+    @Test
     fun `un formulaire complet donne un nouveau monde au nom débarrassé des espaces`() {
         assertEquals(
             NewWorld("Royaumes de Valdor", documents).right(),

@@ -14,6 +14,6 @@ fun DesktopApp() {
     var creatingWorld by remember { mutableStateOf(false) }
     HomeScreen(onCreateWorld = { creatingWorld = true }, onOpenWorld = {})
     if (creatingWorld) {
-        CreateWorldDialog(onDismiss = { creatingWorld = false }, onCreate = { creatingWorld = false })
+        CreateWorldDialog(onDismiss = { creatingWorld = false }, onCreated = { creatingWorld = false })
     }
 }
