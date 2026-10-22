@@ -1,15 +1,12 @@
-product: jvm/app
+product: jvm/lib
 
 dependencies:
   - //core
   - $ktor.server.core
   - $ktor.server.netty
-  - $libs.logback.classic
 
 settings:
   ktor: enabled
-  jvm:
-    mainClass: com.estebandacosta.jdrassistant.server.ApplicationKt
 
 test-dependencies:
   - $ktor.server.testHost

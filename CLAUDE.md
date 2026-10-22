@@ -19,15 +19,16 @@ Ce doc est la **source de vérité du modèle**. Avant d'implémenter quelque ch
 ## Stack et commandes
 
 - **Kotlin Toolchain** (ex-Amper), pas Gradle. Wrapper `./kotlin` à la racine, version épinglée dans le script. `project.yaml` liste les modules, chaque module a son `module.yaml`. Doc : <https://kotlin-toolchain.org/>.
-- Layout d'un module : `src/` (commun), `src@jvm/`, `src@android/`, `src@ios/`, `src@wasmJs/` (spécifique), `test/`, `resources/`. `kotlin.test` est fourni automatiquement aux tests.
-- Modules : `core` (kmp/lib, cibles jvm, android, iosArm64, iosSimulatorArm64, wasmJs), `app/shared` (Compose Multiplatform), `app/androidApp`, `app/desktopApp`, `app/iosApp`, `app/webApp` (points d'entrée), `server` (Ktor, JVM).
+- Layout d'un module : `src/` (commun), `src@jvm/`, `src@android/`, `src@ios/` (spécifique), `test/`, `resources/`. `kotlin.test` est fourni automatiquement aux tests.
+- Modules : `core` (kmp/lib, cibles jvm, android, iosArm64, iosSimulatorArm64), `app/shared` (Compose Multiplatform), `app/androidApp`, `app/desktopApp`, `app/iosApp` (points d'entrée), `server` (Ktor, bibliothèque JVM démarrée par `desktopApp`).
+- Plateformes visées : **desktop** (PC du MJ), **Android** et **iOS** (joueurs). Pas de version web. Le serveur tourne dans l'app desktop du MJ : il démarre avec elle et s'arrête à la fermeture de la fenêtre.
 - Package racine : `com.estebandacosta.jdrassistant`. Le core vit sous `com.estebandacosta.jdrassistant.core`.
 
 ```bash
 ./kotlin build -m core            # compile le core pour toutes ses plateformes
 ./kotlin test -m core -p jvm      # tests du core, JVM seulement (boucle rapide)
 ./kotlin test -m core             # tests du core sur toutes les plateformes
-./kotlin show modules             # liste des modules
+./kotlin show modules             # liste des modules (-m prend le nom court : shared, desktopApp…)
 ```
 
 Le core doit rester compilable sur **toutes** ses cibles : pas de `java.*` en `src/`, pas d'IO fichier, pas de réflexion. Les dépendances plateforme passent par `expect`/`actual` ou par des interfaces implémentées dans les apps.
@@ -38,7 +39,7 @@ Le core doit rester compilable sur **toutes** ses cibles : pas de `java.*` en `s
 
 - À l'aise avec la syntaxe et les mécaniques Kotlin (`sealed`, `value class`, `when`, lambdas, génériques, coroutines de base). Ne pas expliquer la syntaxe.
 - Veut **apprendre les mécanismes de conception que Kotlin rend naturels** : types de résultat et monades (`Result`, `Either`), modélisation des erreurs métier à la Arrow (erreurs typées plutôt qu'exceptions), immutabilité et fonctions pures, hiérarchies scellées comme machines à états, séparation donnée / comportement. Expliquer le **pourquoi** du mécanisme, le problème qu'il résout et ce qu'on perdrait sans lui.
-- **Néophyte sur KMP** au-delà du hello world : connaît `expect`/`actual` et le layout, n'a jamais mené de projet KMP poussé. Expliquer les contraintes multiplateformes quand elles apparaissent (ce qui manque en commun, spécificités wasm et iOS, sérialisation, threading), au moment où elles se présentent et pas avant.
+- **Néophyte sur KMP** au-delà du hello world : connaît `expect`/`actual` et le layout, n'a jamais mené de projet KMP poussé. Expliquer les contraintes multiplateformes quand elles apparaissent (ce qui manque en commun, spécificités iOS, sérialisation, threading), au moment où elles se présentent et pas avant.
 
 ### Déroulé des tâches
 
