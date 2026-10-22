@@ -1,14 +1,38 @@
 package com.estebandacosta.jdrassistant.core.value
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+
 /**
  * Configuration d'un champ ressource, déclarée par le module et partagée par toutes les instances.
  *
  * @property min plancher de `current` ; peut être négatif.
+ * @property allowTemp le champ accepte une réserve temporaire.
  */
 data class ResourceType(
     val min: Int = 0,
+    val allowTemp: Boolean = false,
 ) {
-    /** Applique [op] à [state] et renvoie le nouvel état. */
+    /** Valide [op] ; renvoie l'opération acceptée, ou la raison du refus. */
+    fun decide(op: ResourceOp): Either<ResourceError, ResourceOp> = either {
+        when (op) {
+            is ResourceOp.Damage -> ensure(op.amount >= 0) { ResourceError.NegativeAmount(op.amount) }
+            is ResourceOp.Heal -> ensure(op.amount >= 0) { ResourceError.NegativeAmount(op.amount) }
+            is ResourceOp.SetTemp -> {
+                ensure(allowTemp) { ResourceError.TempNotAllowed }
+                ensure(op.amount >= 0) { ResourceError.NegativeAmount(op.amount) }
+            }
+            is ResourceOp.SetMax -> ensure(op.max >= min) { ResourceError.MaxBelowMin(op.max, min) }
+            ResourceOp.Reset -> {}
+        }
+        op
+    }
+
+    /**
+     * Applique [op] à [state] et renvoie le nouvel état.
+     * Ne valide rien : [op] doit avoir été acceptée par [decide].
+     */
     fun evolve(state: ResourceValue, op: ResourceOp): ResourceValue = when (op) {
         is ResourceOp.Damage -> {
             val fromTemp = minOf(op.amount, state.temp)
@@ -51,4 +75,16 @@ sealed interface ResourceOp {
 
     /** Remet le courant au max et vide le temporaire. */
     data object Reset : ResourceOp
+}
+
+/** Raisons pour lesquelles [ResourceType.decide] refuse une opération. */
+sealed interface ResourceError {
+    /** Un montant doit être positif ou nul. */
+    data class NegativeAmount(val amount: Int) : ResourceError
+
+    /** Le max demandé est sous le plancher du champ. */
+    data class MaxBelowMin(val max: Int, val min: Int) : ResourceError
+
+    /** Le champ n'accepte pas de réserve temporaire. */
+    data object TempNotAllowed : ResourceError
 }
