@@ -4,9 +4,13 @@ dependencies:
   - //app/shared
   - //server
   - $compose.desktop.currentOs
+  - $compose.foundation
   - $compose.preview
   - $libs.kotlinx.coroutines.swing
   - $libs.logback.classic
+
+test-dependencies:
+  - $compose.uiTest
 
 settings:
   compose: enabled
