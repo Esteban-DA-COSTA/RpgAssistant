@@ -2,5 +2,12 @@ product:
   type: kmp/lib
   platforms: [ jvm, android, iosArm64, iosSimulatorArm64, wasmJs ]
 
+settings:
+  kotlin:
+    serialization: enabled
+
 dependencies:
   - $libs.arrow.core: exported
+
+test-dependencies:
+  - $kotlin.serialization.json

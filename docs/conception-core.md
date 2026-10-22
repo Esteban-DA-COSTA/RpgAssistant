@@ -22,6 +22,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | D5 | Modules déclaratifs | **Décidé** | Un type comme « PJ » est une **déclaration** du module (données), pas une sous-classe Kotlin. Les modules ne contiennent pas de code compilé. |
 | D6 | Modules tiers | **Décidé** | N'importe qui peut créer un module de système de jeu (ex. Pathfinder) : schémas, types de personnages, d'objets, de compétences, bibliothèque de contenus **et interfaces** (layout, style, boutons et leurs actions). Le core interprète le module, côté MJ comme côté mobile. |
 | D7 | Modèle de référence | **Décidé** | Inspiré des systèmes Foundry VTT, en moins poussé : pas de logique de calcul ni d'automatisation. |
+| D8 | Noms de format | **Décidé** | Chaque sous-classe sérialisée d'une hiérarchie scellée porte un `@SerialName` explicite et stable, de la forme `famille.membre` : famille en minuscules, puis nom Kotlin en camelCase (`resource.damage`, `resource.setTemp`, `element.unknownField`). Une valeur porte le nom de sa famille seul (`resource`, `flag`). Renommer une classe Kotlin est un refactoring interne ; changer un `@SerialName` est une rupture de format. |
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
 | P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
@@ -443,9 +444,9 @@ Chaque Kind d'Item peut fournir plusieurs layouts (`compact` pour une liste, `de
   "style": "primary",
   "confirm": "Effectuer un repos long ?",
   "actions": [
-    { "op": "Resource.Reset", "field": "hp" },
-    { "op": "Resource.Reset", "field": "spellSlots.*" },
-    { "op": "Resource.Recover", "field": "hitDice", "fraction": 0.5 },
+    { "op": "resource.reset", "field": "hp" },
+    { "op": "resource.reset", "field": "spellSlots.*" },
+    { "op": "resource.recover", "field": "hitDice", "fraction": 0.5 },
     { "op": "Notify", "to": "gm", "message": "{name} prend un repos long" }
   ]
 }

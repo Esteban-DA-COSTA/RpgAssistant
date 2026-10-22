@@ -3,6 +3,8 @@ package com.estebandacosta.jdrassistant.core.value
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Configuration d'un champ booléen (inspiration, objet harmonisé) ; sans paramètre. */
 data object FlagType : ValueType {
@@ -21,10 +23,15 @@ data object FlagType : ValueType {
 }
 
 /** État d'un champ booléen. */
+@Serializable
+@SerialName("flag")
 data class FlagValue(val on: Boolean) : FieldValue
 
 /** Opérations possibles sur une [FlagValue]. */
+@Serializable
 sealed interface FlagOp : ValueOp {
     /** Fixe la valeur à [on]. */
+    @Serializable
+    @SerialName("flag.set")
     data class Set(val on: Boolean) : FlagOp
 }
