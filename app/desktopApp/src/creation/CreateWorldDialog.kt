@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.estebandacosta.jdrassistant.LocalDialogParent
 import com.estebandacosta.jdrassistant.components.GemButton
 import com.estebandacosta.jdrassistant.components.JdrButton
 import com.estebandacosta.jdrassistant.components.JdrText
@@ -48,6 +49,9 @@ import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrColors
 import com.estebandacosta.jdrassistant.theme.JdrTheme
 import com.estebandacosta.jdrassistant.theme.panel
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import java.nio.file.Path
 
 /** Modale de création d'un monde : [onCreate] reçoit le monde validé, [onDismiss] ferme sans rien créer. */
@@ -55,6 +59,15 @@ import java.nio.file.Path
 fun CreateWorldDialog(onDismiss: () -> Unit, onCreate: (NewWorld) -> Unit) {
     var form by remember { mutableStateOf(CreateWorldForm()) }
     var errors by remember { mutableStateOf(emptySet<CreateWorldError>()) }
+    val directoryPicker = rememberDirectoryPickerLauncher(
+        directory = form.location?.let { PlatformFile(it.toFile()) },
+        dialogSettings = FileKitDialogSettings(title = "Emplacement du monde", parent = LocalDialogParent.current),
+    ) { picked ->
+        if (picked != null) {
+            form = form.copy(location = picked.file.toPath())
+            errors -= CreateWorldError.MissingLocation
+        }
+    }
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, scrimColor = JdrTheme.colors.scrim),
@@ -66,6 +79,7 @@ fun CreateWorldDialog(onDismiss: () -> Unit, onCreate: (NewWorld) -> Unit) {
                 form = form.copy(name = it)
                 errors -= CreateWorldError.BlankName
             },
+            onBrowse = { directoryPicker.launch() },
             onCancel = onDismiss,
             onSubmit = { form.validate().fold({ errors = it.toSet() }, onCreate) },
         )
@@ -77,6 +91,7 @@ private fun CreateWorldCard(
     form: CreateWorldForm,
     errors: Set<CreateWorldError>,
     onNameChange: (String) -> Unit,
+    onBrowse: () -> Unit,
     onCancel: () -> Unit,
     onSubmit: () -> Unit,
 ) {
@@ -108,7 +123,7 @@ private fun CreateWorldCard(
                 hint = "Le monde et toutes ses fiches seront enregistrés dans ce dossier.",
                 error = "Choisissez le dossier où enregistrer le monde.".takeIf { CreateWorldError.MissingLocation in errors },
             ) {
-                LocationInput(form.location)
+                LocationInput(form.location, onBrowse)
             }
             Separator()
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.End)) {
@@ -200,7 +215,7 @@ private fun NameInput(name: String, onNameChange: (String) -> Unit) {
 }
 
 @Composable
-private fun LocationInput(location: Path?) {
+private fun LocationInput(location: Path?, onBrowse: () -> Unit) {
     val colors = JdrTheme.colors
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(
@@ -212,10 +227,10 @@ private fun LocationInput(location: Path?) {
                 JdrTheme.typography.mono,
                 if (location == null) colors.textFaint else colors.textStrong,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.MiddleEllipsis,
             )
         }
-        GemButton("Parcourir…", JdrTheme.gems.tertiary, FantasyIcons.folder, onClick = {})
+        GemButton("Parcourir…", JdrTheme.gems.tertiary, FantasyIcons.folder, onClick = onBrowse)
     }
 }
 
