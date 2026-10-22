@@ -24,19 +24,32 @@ data class JdrColors(
     val textHighlight: Color,
     val textStrong: Color,
     val textMuted: Color,
+    val textFaint: Color,
     val ornament: Color,
     val bar: Color,
+    val field: Color,
+    val accent: Color,
+    val accentGlow: Color,
+    val accentShadow: Color,
+    val onAccent: Color,
+    val danger: Color,
+    val scrim: Color,
 )
 
 /** Styles de texte d'un thème, sans couleur : l'appelant la choisit dans [JdrColors]. */
 @Immutable
 data class JdrTypography(
     val display: TextStyle,
+    val heading: TextStyle,
     val title: TextStyle,
     val brand: TextStyle,
     val eyebrow: TextStyle,
+    val label: TextStyle,
+    val button: TextStyle,
+    val input: TextStyle,
     val description: TextStyle,
     val footnote: TextStyle,
+    val mono: TextStyle,
 )
 
 /** Dégradés des gemmes d'un thème, du reflet à l'ombre. */
@@ -45,6 +58,7 @@ data class JdrGems(
     val emblem: List<Color>,
     val primary: List<Color>,
     val secondary: List<Color>,
+    val tertiary: List<Color>,
 )
 
 private val LocalJdrColors = staticCompositionLocalOf<JdrColors> { error("Aucun JdrTheme fourni") }

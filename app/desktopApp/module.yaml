@@ -6,6 +6,7 @@ dependencies:
   - $compose.desktop.currentOs
   - $compose.foundation
   - $compose.preview
+  - $libs.arrow.core
   - $libs.kotlinx.coroutines.swing
   - $libs.logback.classic
 

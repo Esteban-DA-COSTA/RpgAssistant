@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +49,8 @@ fun ActionCard(
     ) {
         Gem(colors = gem, icon = icon, size = 76.dp, iconSize = 38.dp)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            BasicText(
-                title,
-                style = typography.title.copy(color = if (highlighted) colors.textHighlight else colors.textStrong),
-            )
-            BasicText(subtitle, style = typography.description.copy(color = colors.textMuted))
+            JdrText(title, typography.title, if (highlighted) colors.textHighlight else colors.textStrong)
+            JdrText(subtitle, typography.description, colors.textMuted)
         }
         Image(
             FantasyIcons.chevronRight,

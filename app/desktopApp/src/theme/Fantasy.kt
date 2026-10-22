@@ -30,8 +30,16 @@ private val FantasyColors = JdrColors(
     textHighlight = Color(0xFFF4E2A8),
     textStrong = Color(0xFFF1E6C2),
     textMuted = Color(0xFFCDB678),
+    textFaint = Color(0xFF8E8264),
     ornament = Color(0xFF2E2614),
     bar = Color(0xC714110C),
+    field = Color(0xFF14120F),
+    accent = Color(0xFFB3361F),
+    accentGlow = Color(0xFFE07A4A),
+    accentShadow = Color(0xFF4A120A),
+    onAccent = Color(0xFFFFF0CC),
+    danger = Color(0xFFF08C6C),
+    scrim = Color(0xBD0C0905),
 )
 
 private val Cinzel = FontFamily(
@@ -44,17 +52,25 @@ private val Alegreya = FontFamily(
     Font("font/alegreya_italic.ttf", FontWeight.Normal, FontStyle.Italic),
 )
 
+private val PlexMono = FontFamily(Font("font/ibm_plex_mono_medium.ttf", FontWeight.Medium))
+
 private val FantasyTypography = JdrTypography(
     display = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.Bold, fontSize = 44.sp, lineHeight = 1.15.em),
+    heading = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.Bold, fontSize = 24.sp, letterSpacing = 0.06.em),
     title = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.Bold, fontSize = 23.sp),
     brand = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.Bold, fontSize = 20.sp, letterSpacing = 0.06.em),
     eyebrow = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, letterSpacing = 0.12.em),
+    label = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, letterSpacing = 0.08.em),
+    button = TextStyle(fontFamily = Cinzel, fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 0.08.em),
+    input = TextStyle(fontFamily = Alegreya, fontSize = 18.sp),
     description = TextStyle(fontFamily = Alegreya, fontStyle = FontStyle.Italic, fontSize = 16.sp, lineHeight = 1.4.em),
     footnote = TextStyle(fontFamily = Alegreya, fontStyle = FontStyle.Italic, fontSize = 15.sp),
+    mono = TextStyle(fontFamily = PlexMono, fontWeight = FontWeight.Medium, fontSize = 14.sp),
 )
 
 private val FantasyGems = JdrGems(
     emblem = listOf(Color(0xFFF4D88A), Color(0xFFB8862F), Color(0xFF4A3210)),
     primary = listOf(Color(0xFFFFE2A8), Color(0xFFF0A04A), Color(0xFFB3361F), Color(0xFF2E0A06)),
     secondary = listOf(Color(0xFFCFF0FF), Color(0xFF4FA6D8), Color(0xFF1B4E7A), Color(0xFF0A1B2C)),
+    tertiary = listOf(Color(0xFFD8FFE8), Color(0xFF4FC48C), Color(0xFF1C6E4A), Color(0xFF08221A)),
 )

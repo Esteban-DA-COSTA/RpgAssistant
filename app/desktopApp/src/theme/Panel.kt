@@ -8,12 +8,19 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Cadre de panneau : dégradé de [colors], liseré de bord puis liseré [rim]. */
-fun Modifier.panel(colors: JdrColors, shape: Shape, rim: Color = colors.rim): Modifier = this
-    .shadow(12.dp, shape)
+/** Cadre de panneau : remplissage [fill], liseré de bord puis liseré [rim], ombre portée [elevation]. */
+fun Modifier.panel(
+    colors: JdrColors,
+    shape: Shape,
+    rim: Color = colors.rim,
+    fill: Brush = Brush.verticalGradient(listOf(colors.panelTop, colors.panelBottom)),
+    elevation: Dp = 12.dp,
+): Modifier = this
+    .shadow(elevation, shape)
     .border(1.dp, colors.edge, shape)
     .padding(1.dp)
     .border(1.dp, rim, shape)
-    .background(Brush.verticalGradient(listOf(colors.panelTop, colors.panelBottom)), shape)
+    .background(fill, shape)

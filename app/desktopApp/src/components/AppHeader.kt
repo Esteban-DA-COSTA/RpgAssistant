@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +33,6 @@ fun AppHeader(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Gem(colors = JdrTheme.gems.emblem, icon = FantasyIcons.sword, size = 44.dp, iconSize = 24.dp)
-        BasicText("Assistant JdR", style = JdrTheme.typography.brand.copy(color = colors.brand))
+        JdrText("Assistant JdR", JdrTheme.typography.brand, colors.brand)
     }
 }

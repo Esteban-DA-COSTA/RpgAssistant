@@ -23,9 +23,18 @@ object FantasyIcons {
         stroke("M16 9 C12 6 7 6 3 7 V25 C7 24 12 24 16 27 C20 24 25 24 29 25 V7 C25 6 20 6 16 9 Z M16 9 V27", Color(0xFFF2FAFF), 1.8f)
     }
 
+    val folder: ImageVector = icon("folder", 24f) {
+        stroke("M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z", Color(0xFFF2FFF6), 1.9f)
+    }
+
     /** Tracé neutre, à teinter à l'affichage. */
     val chevronRight: ImageVector = icon("chevronRight", 24f) {
         stroke("M9 6l6 6-6 6", Color.White, 1.8f)
+    }
+
+    /** Tracé neutre, à teinter à l'affichage. */
+    val close: ImageVector = icon("close", 24f) {
+        stroke("M6 6l12 12M18 6L6 18", Color.White, 2f)
     }
 }
 

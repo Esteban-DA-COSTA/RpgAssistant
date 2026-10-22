@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.estebandacosta.jdrassistant.components.ActionCard
 import com.estebandacosta.jdrassistant.components.AppHeader
 import com.estebandacosta.jdrassistant.components.Diamond
+import com.estebandacosta.jdrassistant.components.JdrText
 import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrTheme
 
@@ -94,15 +94,9 @@ private fun Welcome() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Diamond(colors.brand, 8.dp)
-            BasicText(
-                "Bienvenue, maître du jeu",
-                style = typography.eyebrow.copy(color = colors.textStrong, shadow = shadow),
-            )
+            JdrText("Bienvenue, maître du jeu", typography.eyebrow.copy(shadow = shadow), colors.textStrong)
         }
-        BasicText(
-            "Quel monde ouvrons-nous ce soir ?",
-            style = typography.display.copy(color = colors.textHighlight, shadow = shadow),
-        )
+        JdrText("Quel monde ouvrons-nous ce soir ?", typography.display.copy(shadow = shadow), colors.textHighlight)
     }
 }
 
@@ -143,9 +137,6 @@ private fun Footer() {
             }
             .padding(horizontal = 48.dp, vertical = 14.dp),
     ) {
-        BasicText(
-            "Les joueurs se connectent depuis l'app mobile.",
-            style = JdrTheme.typography.footnote.copy(color = colors.textMuted),
-        )
+        JdrText("Les joueurs se connectent depuis l'app mobile.", JdrTheme.typography.footnote, colors.textMuted)
     }
 }
