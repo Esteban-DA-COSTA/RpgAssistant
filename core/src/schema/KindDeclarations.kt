@@ -8,11 +8,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.separateEither
 import arrow.core.toNonEmptyListOrNull
 import com.estebandacosta.jdrassistant.core.KindId
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
+import com.estebandacosta.jdrassistant.core.decodeEntries
 
 /** Raisons pour lesquelles le contenu de `kinds.json` est refusé. */
 sealed interface KindDeclarationError {
@@ -28,23 +24,13 @@ sealed interface KindDeclarationError {
 
 /** Décode le contenu de `kinds.json` en registre, ou renvoie toutes les erreurs trouvées. */
 fun decodeKinds(text: String): Either<NonEmptyList<KindDeclarationError>, KindRegistry> = either {
-    val entries = ensureNotNull(parseList(text)) { nonEmptyListOf(KindDeclarationError.NotAList) }
-    val (malformed, kinds) = entries.mapIndexed(::decodeKind).separateEither()
+    val entries = ensureNotNull(decodeEntries(text, Kind.serializer())) { nonEmptyListOf(KindDeclarationError.NotAList) }
+    val (malformed, kinds) = entries.mapIndexed { index, entry ->
+        entry.mapLeft { KindDeclarationError.Malformed(index, it) }.map { IndexedValue(index, it) }
+    }.separateEither()
     (malformed + duplicates(kinds)).toNonEmptyListOrNull()?.let { raise(it) }
     KindRegistry(kinds.map { it.value })
 }
-
-private fun parseList(text: String): JsonArray? =
-    try {
-        Json.parseToJsonElement(text) as? JsonArray
-    } catch (_: SerializationException) {
-        null
-    }
-
-private fun decodeKind(index: Int, entry: JsonElement): Either<KindDeclarationError, IndexedValue<Kind>> =
-    Either.catchOrThrow<SerializationException, Kind> { Json.decodeFromJsonElement<Kind>(entry) }
-        .mapLeft { KindDeclarationError.Malformed(index, it.message.orEmpty()) }
-        .map { IndexedValue(index, it) }
 
 private fun duplicates(kinds: List<IndexedValue<Kind>>): List<KindDeclarationError> =
     kinds.groupBy({ it.value.id }, { it.index })

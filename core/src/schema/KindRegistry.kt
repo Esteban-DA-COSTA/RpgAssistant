@@ -16,6 +16,9 @@ import com.estebandacosta.jdrassistant.core.world.WorldError
 class KindRegistry(kinds: Iterable<Kind>) {
     private val byId: Map<KindId, Kind> = kinds.associateBy { it.id }
 
+    /** Kind d'identifiant [id], ou `null` s'il n'est pas chargé. */
+    operator fun get(id: KindId): Kind? = byId[id]
+
     /** Valide [op] sur [world] ; renvoie l'opération acceptée, ou la raison du refus. */
     fun decide(world: World, op: Operation): Either<WorldError, Operation> = either {
         when (op) {
