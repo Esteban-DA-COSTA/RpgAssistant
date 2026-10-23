@@ -9,6 +9,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** État de la campagne : ses éléments, indexés par identifiant. */
+@Serializable
 data class World(
     val elements: Map<ElementId, Element> = emptyMap(),
 )

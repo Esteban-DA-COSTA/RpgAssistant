@@ -8,6 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Instance vivante : l'état de chacun de ses champs, conforme au Kind [kind]. */
+@Serializable
 data class Element(
     val kind: KindId,
     val values: Map<String, FieldValue>,
