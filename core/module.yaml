@@ -8,6 +8,4 @@ settings:
 
 dependencies:
   - $libs.arrow.core: exported
-
-test-dependencies:
   - $kotlin.serialization.json

@@ -24,6 +24,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | D7 | Modèle de référence | **Décidé** | Inspiré des systèmes Foundry VTT, en moins poussé : pas de logique de calcul ni d'automatisation. |
 | D8 | Noms de format | **Décidé** | Chaque sous-classe sérialisée d'une hiérarchie scellée porte un `@SerialName` explicite et stable, de la forme `famille.membre` : famille en minuscules, puis nom Kotlin en camelCase (`resource.damage`, `resource.setTemp`, `element.unknownField`). Une valeur porte le nom de sa famille seul (`resource`, `flag`), et le type de valeur qui la configure porte le même (`{"type": "resource", "min": -10}` dans un Kind). Renommer une classe Kotlin est un refactoring interne ; changer un `@SerialName` est une rupture de format. |
 | D9 | Format de l'état | **Décidé** | Un `World` se sérialise en objet JSON dont les clés sont les `ElementId` : l'identifiant reste hors de l'`Element`, et l'unicité tient à la structure. Le décodage vérifie la structure, pas la conformité aux Kinds : un élément incohérent est refusé à la première opération qui le touche (`UnknownKind`, `MissingValue`, `ValueMismatch`). |
+| D10 | Kinds d'un module | **Décidé** | Les Kinds d'un module tiennent dans un seul `kinds.json` : une liste de Kinds, chacun portant son `id`. Le chargement décode chaque Kind séparément et rapporte toutes les erreurs d'un coup, repérées par leur position : fichier illisible ou qui n'est pas une liste, Kind mal formé, Kind déclaré plusieurs fois. Une liste plutôt qu'un objet indexé par id, parce qu'une clé JSON en double y serait écrasée sans erreur. |
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
 | P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
@@ -366,7 +367,7 @@ Le principe « pas de règles » rend cette approche réaliste : ce qui exigerai
 | Foundry VTT | Jdr Assistant | Remarque |
 |---|---|---|
 | `system.json` (manifeste) | `module.json` | id, version, compatibilité core, dépendances |
-| `template.json` / DataModels | `kinds/*.json` | Kinds avec FieldDef et SlotDef |
+| `template.json` / DataModels | `kinds.json` | Liste des Kinds, avec FieldDef et SlotDef (D10) |
 | Compendium packs | `compendium/*.json` | Blueprints (armes, sorts, monstres…) |
 | Templates Handlebars | `layouts/*.json` | Arbres de `LayoutNode` |
 | CSS | `theme.json` + `assets/` | Tokens, variantes, polices, icônes |
@@ -379,12 +380,7 @@ Le principe « pas de règles » rend cette approche réaliste : ce qui exigerai
 ```
 pf2e/
 ├── module.json
-├── kinds/
-│   ├── character.json
-│   ├── npc.json
-│   ├── weapon.json
-│   ├── spell.json
-│   └── feat.json
+├── kinds.json
 ├── compendium/
 │   ├── weapons.json
 │   ├── spells.json
