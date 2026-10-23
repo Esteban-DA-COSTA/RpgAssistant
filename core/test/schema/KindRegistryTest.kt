@@ -44,13 +44,13 @@ class KindRegistryTest {
 
     @Test
     fun `an operation on a known element is accepted`() {
-        val op = Operation(thorin, FieldOp(FieldKey("hp"), Damage(5)))
+        val op = Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), Damage(5)))
         assertEquals(op.right(), registry.decide(world, op))
     }
 
     @Test
     fun `evolve changes only the targeted element`() {
-        val after = registry.evolve(world, Operation(wand, FieldOp(FieldKey("charges"), Damage(1))))
+        val after = registry.evolve(world, Operation.UpdateField(wand, FieldOp(FieldKey("charges"), Damage(1))))
         assertEquals(ResourceValue(current = 4, max = 7), after.elements.getValue(wand).values[FieldKey("charges")])
         assertEquals(world.elements[thorin], after.elements[thorin])
     }
@@ -58,7 +58,7 @@ class KindRegistryTest {
     @Test
     fun `an unknown element is refused`() {
         val ghost = ElementId("ghost")
-        assertEquals(UnknownElement(ghost).left(), registry.decide(world, Operation(ghost, FieldOp(FieldKey("hp"), Damage(1)))))
+        assertEquals(UnknownElement(ghost).left(), registry.decide(world, Operation.UpdateField(ghost, FieldOp(FieldKey("hp"), Damage(1)))))
     }
 
     @Test
@@ -66,22 +66,22 @@ class KindRegistryTest {
         val orc = ElementId("orc")
         val withOrc = World(world.elements + (orc to Element(KindId("test:monster"), emptyMap())))
         val expected = UnknownKind(orc, KindId("test:monster"))
-        assertEquals(expected.left(), registry.decide(withOrc, Operation(orc, FieldOp(FieldKey("hp"), Damage(1)))))
+        assertEquals(expected.left(), registry.decide(withOrc, Operation.UpdateField(orc, FieldOp(FieldKey("hp"), Damage(1)))))
     }
 
     @Test
     fun `a refusal is reported along the full path`() {
         val expected = InvalidOnElement(thorin, InvalidOperation(FieldKey("hp"), NegativeAmount(-5)))
-        assertEquals(expected.left(), registry.decide(world, Operation(thorin, FieldOp(FieldKey("hp"), Damage(-5)))))
+        assertEquals(expected.left(), registry.decide(world, Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), Damage(-5)))))
     }
 
     @Test
     fun `replaying the journal of accepted operations rebuilds the same world`() {
         val incoming = listOf(
-            Operation(thorin, FieldOp(FieldKey("hp"), Damage(8))),
-            Operation(wand, FieldOp(FieldKey("charges"), Damage(-1))),
-            Operation(wand, FieldOp(FieldKey("charges"), Damage(2))),
-            Operation(thorin, FieldOp(FieldKey("hp"), Heal(3))),
+            Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), Damage(8))),
+            Operation.UpdateField(wand, FieldOp(FieldKey("charges"), Damage(-1))),
+            Operation.UpdateField(wand, FieldOp(FieldKey("charges"), Damage(2))),
+            Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), Heal(3))),
         )
 
         var live = world

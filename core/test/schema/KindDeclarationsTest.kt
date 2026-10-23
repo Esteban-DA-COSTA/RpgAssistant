@@ -41,8 +41,8 @@ class KindDeclarationsTest {
             ),
         )
         val ops = listOf(
-            Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(5))),
-            Operation(gob, FieldOp(FieldKey("fleeing"), FlagOp.Set(true))),
+            Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(5))),
+            Operation.UpdateField(gob, FieldOp(FieldKey("fleeing"), FlagOp.Set(true))),
         )
 
         ops.forEach { assertEquals(it.right(), registry.decide(world, it)) }
