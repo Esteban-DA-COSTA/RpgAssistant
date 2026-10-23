@@ -39,6 +39,8 @@ private val FantasyColors = JdrColors(
     accentShadow = Color(0xFF4A120A),
     onAccent = Color(0xFFFFF0CC),
     danger = Color(0xFFF08C6C),
+    warning = Color(0xFFFFE6B0),
+    success = Color(0xFFC8F0D2),
     scrim = Color(0xBD0C0905),
 )
 
@@ -73,4 +75,6 @@ private val FantasyGems = JdrGems(
     primary = listOf(Color(0xFFFFE2A8), Color(0xFFF0A04A), Color(0xFFB3361F), Color(0xFF2E0A06)),
     secondary = listOf(Color(0xFFCFF0FF), Color(0xFF4FA6D8), Color(0xFF1B4E7A), Color(0xFF0A1B2C)),
     tertiary = listOf(Color(0xFFD8FFE8), Color(0xFF4FC48C), Color(0xFF1C6E4A), Color(0xFF08221A)),
+    danger = listOf(Color(0xFFFFD9C8), Color(0xFFE06A48), Color(0xFF8A2414), Color(0xFF2E0A06)),
+    warning = listOf(Color(0xFFFFEFC2), Color(0xFFE3A846), Color(0xFF8A5A14), Color(0xFF2E1E06)),
 )

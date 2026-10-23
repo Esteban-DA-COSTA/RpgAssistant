@@ -3,6 +3,8 @@ package com.estebandacosta.jdrassistant.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -15,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrTheme
 
-/** Bandeau du haut de l'app desktop : emblème et nom de l'app, sur toute la largeur. */
+/** Bandeau du haut de l'app desktop : emblème et nom de l'app à gauche, [actions] à droite. */
 @Composable
-fun AppHeader(modifier: Modifier = Modifier) {
+fun AppHeader(modifier: Modifier = Modifier, actions: @Composable RowScope.() -> Unit = {}) {
     val colors = JdrTheme.colors
     Row(
         modifier
@@ -34,5 +36,7 @@ fun AppHeader(modifier: Modifier = Modifier) {
     ) {
         Gem(colors = JdrTheme.gems.emblem, icon = FantasyIcons.sword, size = 44.dp, iconSize = 24.dp)
         JdrText("Assistant JdR", JdrTheme.typography.brand, colors.brand)
+        Spacer(Modifier.weight(1f))
+        actions()
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +18,10 @@ import androidx.compose.ui.unit.dp
 import com.estebandacosta.jdrassistant.components.JdrToast
 import com.estebandacosta.jdrassistant.creation.CreateWorldDialog
 import com.estebandacosta.jdrassistant.home.HomeScreen
+import com.estebandacosta.jdrassistant.modules.ModulesScreen
+import com.estebandacosta.jdrassistant.modules.ModulesState
+import com.estebandacosta.jdrassistant.storage.AppFolders
+import com.estebandacosta.jdrassistant.storage.ModuleStorage
 import com.estebandacosta.jdrassistant.storage.OpenWorldError
 import com.estebandacosta.jdrassistant.storage.OpenedWorld
 import com.estebandacosta.jdrassistant.storage.WorldStorage
@@ -34,6 +39,9 @@ private sealed interface DesktopScreen {
 
     /** Le monde [world], ouvert. */
     data class WorldOpened(val world: OpenedWorld) : DesktopScreen
+
+    /** Les modules installés. */
+    data object Modules : DesktopScreen
 }
 
 /** Racine de l'app du MJ : l'écran courant et les messages d'erreur éphémères. */
@@ -65,6 +73,7 @@ fun DesktopApp() {
                 HomeScreen(
                     onCreateWorld = { screen = DesktopScreen.Home(creatingWorld = true) },
                     onOpenWorld = { worldPicker.launch() },
+                    onOpenModules = { screen = DesktopScreen.Modules },
                 )
                 if (current.creatingWorld) {
                     CreateWorldDialog(
@@ -77,11 +86,23 @@ fun DesktopApp() {
                 }
             }
             is DesktopScreen.WorldOpened -> WorldScreen(current.world, onClose = { screen = DesktopScreen.Home() })
+            DesktopScreen.Modules -> InstalledModules(onBack = { screen = DesktopScreen.Home() })
         }
         SnackbarHost(toasts, Modifier.align(Alignment.BottomCenter).padding(bottom = 72.dp)) { data ->
             JdrToast(data.visuals.message)
         }
     }
+}
+
+/** Écran des modules, qui parcourt le dossier des modules à chaque entrée. */
+@Composable
+private fun InstalledModules(onBack: () -> Unit) {
+    val root = remember { AppFolders.modules() }
+    var state by remember { mutableStateOf<ModulesState>(ModulesState.Scanning) }
+    LaunchedEffect(root) {
+        state = ModuleStorage.scan(root).fold(ModulesState::Failed, ModulesState::Scanned)
+    }
+    ModulesScreen(root, state, onBack)
 }
 
 private fun openErrorMessage(archive: Path, error: OpenWorldError): String {

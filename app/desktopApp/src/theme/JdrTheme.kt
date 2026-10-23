@@ -33,6 +33,8 @@ data class JdrColors(
     val accentShadow: Color,
     val onAccent: Color,
     val danger: Color,
+    val warning: Color,
+    val success: Color,
     val scrim: Color,
 )
 
@@ -59,6 +61,8 @@ data class JdrGems(
     val primary: List<Color>,
     val secondary: List<Color>,
     val tertiary: List<Color>,
+    val danger: List<Color>,
+    val warning: List<Color>,
 )
 
 private val LocalJdrColors = staticCompositionLocalOf<JdrColors> { error("Aucun JdrTheme fourni") }

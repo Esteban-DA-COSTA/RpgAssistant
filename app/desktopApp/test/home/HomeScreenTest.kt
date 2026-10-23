@@ -14,7 +14,7 @@ class HomeScreenTest {
     @Test
     fun `cliquer sur Créer un monde déclenche la création`() = runComposeUiTest {
         var created = 0
-        setContent { FantasyTheme { HomeScreen(onCreateWorld = { created++ }, onOpenWorld = {}) } }
+        setContent { FantasyTheme { HomeScreen(onCreateWorld = { created++ }, onOpenWorld = {}, onOpenModules = {}) } }
 
         onNodeWithText("Créer un monde").performClick()
 
@@ -24,9 +24,19 @@ class HomeScreenTest {
     @Test
     fun `cliquer sur Ouvrir un monde déclenche l'ouverture`() = runComposeUiTest {
         var opened = 0
-        setContent { FantasyTheme { HomeScreen(onCreateWorld = {}, onOpenWorld = { opened++ }) } }
+        setContent { FantasyTheme { HomeScreen(onCreateWorld = {}, onOpenWorld = { opened++ }, onOpenModules = {}) } }
 
         onNodeWithText("Ouvrir un monde").performClick()
+
+        assertEquals(1, opened)
+    }
+
+    @Test
+    fun `cliquer sur Modules ouvre l'écran des modules`() = runComposeUiTest {
+        var opened = 0
+        setContent { FantasyTheme { HomeScreen(onCreateWorld = {}, onOpenWorld = {}, onOpenModules = { opened++ }) } }
+
+        onNodeWithText("Modules").performClick()
 
         assertEquals(1, opened)
     }

@@ -27,6 +27,28 @@ object FantasyIcons {
         stroke("M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z", Color(0xFFF2FFF6), 1.9f)
     }
 
+    val check: ImageVector = icon("check", 24f) {
+        stroke("M5 12.5l4.5 4.5L19 7.5", Color(0xFFF2FFF5), 2.2f)
+    }
+
+    val copy: ImageVector = icon("copy", 24f) {
+        stroke(
+            "M9.5 8h8A1.5 1.5 0 0 1 19 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 8 17.5v-8A1.5 1.5 0 0 1 9.5 8Z M5 15.5V6.5A1.5 1.5 0 0 1 6.5 5h9",
+            Color(0xFF2E1E06),
+            2f,
+        )
+    }
+
+    /** Tracé neutre, à teinter à l'affichage. */
+    val modules: ImageVector = icon("modules", 24f) {
+        stroke("M3.5 4h4v16h-4Z M9.5 4h4v16h-4Z M15.5 5.2l3.4-0.9 3.6 15-3.4 0.9Z", Color.White, 1.6f)
+    }
+
+    /** Tracé neutre, à teinter à l'affichage. */
+    val chevronLeft: ImageVector = icon("chevronLeft", 24f) {
+        stroke("M15 6l-6 6 6 6", Color.White, 1.8f)
+    }
+
     /** Tracé neutre, à teinter à l'affichage. */
     val chevronRight: ImageVector = icon("chevronRight", 24f) {
         stroke("M9 6l6 6-6 6", Color.White, 1.8f)

@@ -27,21 +27,24 @@ import androidx.compose.ui.unit.dp
 import com.estebandacosta.jdrassistant.components.ActionCard
 import com.estebandacosta.jdrassistant.components.AppHeader
 import com.estebandacosta.jdrassistant.components.Diamond
+import com.estebandacosta.jdrassistant.components.HeaderButton
 import com.estebandacosta.jdrassistant.components.JdrText
 import com.estebandacosta.jdrassistant.theme.FantasyIcons
 import com.estebandacosta.jdrassistant.theme.JdrTheme
 import com.estebandacosta.jdrassistant.theme.vignetteGround
 
-/** Écran d'accueil du MJ : créer un nouveau monde ou en ouvrir un existant. */
+/** Écran d'accueil du MJ : créer un nouveau monde, en ouvrir un existant, ou consulter les modules installés. */
 @Composable
-fun HomeScreen(onCreateWorld: () -> Unit, onOpenWorld: () -> Unit) {
+fun HomeScreen(onCreateWorld: () -> Unit, onOpenWorld: () -> Unit, onOpenModules: () -> Unit) {
     val colors = JdrTheme.colors
     Column(
         Modifier
             .fillMaxSize()
             .vignetteGround(colors),
     ) {
-        AppHeader()
+        AppHeader {
+            HeaderButton("Modules", FantasyIcons.modules, onClick = onOpenModules)
+        }
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             Box(Modifier.widthIn(max = 1200.dp).fillMaxSize()) {
                 CompassRose(Modifier.align(Alignment.TopEnd).offset(x = (-8).dp, y = (-18).dp).size(460.dp))
