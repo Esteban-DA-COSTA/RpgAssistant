@@ -45,7 +45,7 @@ Le core doit rester compilable sur **toutes** ses cibles : pas de `java.*` en `s
 
 - **Découper par étape de flux, jamais par fonctionnalité complète.** On construit un mécanisme dans l'ordre où le besoin apparaît, et chaque étape doit expliquer pourquoi la suivante devient nécessaire. Exemple pour les opérations : créer les `Operation`, puis les appliquer à une valeur, puis les refuser proprement, puis les cibler sur un élément, puis les journaliser. Pas de squelette complet d'avance.
 - Chaque étape est **petite, compilable et testée** avant de passer à la suivante. Un test par comportement, nommé en phrase lisible.
-- **Une étape = un chapitre de session + un commit** : ouvrir un chapitre au début de chaque étape, titré `Étape N · <sujet>`, et terminer l'étape par un commit une fois les tests verts.
+- **Une étape = un chapitre de session + un commit** : ouvrir un chapitre au début de chaque étape, titré `Étape N · <sujet>`, et la clore par un commit. Ce commit n'est fait qu'**après validation de l'étape par l'utilisateur**, jamais dès la fin de l'implémentation : le travail attend sa relecture sur un working tree modifié.
 - **Avant d'écrire** : exposer le choix de conception et ses alternatives en quelques phrases, avec une recommandation. **Après** : un encart pédagogique sur ce que le code illustre. On réfléchit ensemble, l'utilisateur tranche.
 - Pas d'anticipation dans le code : pas de champ, de paramètre ou d'abstraction « au cas où ». Si une étape future en aura besoin, le dire, ne pas le coder.
 - Hors du commit de fin d'étape, ne jamais commiter sans demande explicite. Ne jamais pusher sans demande explicite.
