@@ -102,8 +102,8 @@ class ModuleStorageTest {
 
     @Test
     fun `liste chaque sous-dossier du dossier des modules, triés par nom`() = runBlocking {
-        write("zeta/module.json" to manifest, "zeta/kinds.json" to kinds)
-        write("alpha/module.json" to manifest, "alpha/kinds.json" to kinds)
+        writeModule("zeta", id = "zeta")
+        writeModule("alpha", id = "alpha")
 
         val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
 
@@ -141,7 +141,46 @@ class ModuleStorageTest {
         assertIs<ScanFailed>(ModuleStorage.scan(folder.resolve("modules")).leftOrNull())
     }
 
+    @Test
+    fun `deux dossiers qui déclarent le même id sont tous deux écartés, chacun citant l'autre`() = runBlocking {
+        writeModule("dnd5e", id = "dnd5e")
+        writeModule("dnd5e-ancien", id = "dnd5e")
+
+        val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
+
+        val (current, old) = installed.map { assertIs<InstalledModule.Duplicate>(it) }
+        assertEquals(nonEmptyListOf(folder.resolve("dnd5e-ancien")), current.others)
+        assertEquals(nonEmptyListOf(folder.resolve("dnd5e")), old.others)
+    }
+
+    @Test
+    fun `un module à l'id unique reste chargé à côté d'un doublon`() = runBlocking<Unit> {
+        writeModule("dnd5e", id = "dnd5e")
+        writeModule("dnd5e-ancien", id = "dnd5e")
+        writeModule("pf2e", id = "pf2e")
+
+        val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
+
+        assertIs<InstalledModule.Loaded>(installed.single { it.folder == folder.resolve("pf2e") })
+    }
+
+    @Test
+    fun `un dossier refusé n'entre pas en conflit avec un module chargé du même id`() = runBlocking<Unit> {
+        writeModule("dnd5e", id = "dnd5e")
+        write("dnd5e-casse/module.json" to """{"id":"dnd5e","title":"Cassé"}""", "dnd5e-casse/kinds.json" to "{}")
+
+        val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
+
+        assertIs<InstalledModule.Loaded>(installed[0])
+        assertIs<InstalledModule.Invalid>(installed[1])
+    }
+
     private fun write(vararg files: Pair<String, String>) {
         files.forEach { (path, content) -> folder.resolve(path).createParentDirectories().writeText(content) }
     }
+
+    private fun writeModule(directory: String, id: String) = write(
+        "$directory/module.json" to """{"id":"$id","title":"Module $id"}""",
+        "$directory/kinds.json" to """[{"id":"$id:npc","fields":{"hp":{"type":"resource"}}}]""",
+    )
 }

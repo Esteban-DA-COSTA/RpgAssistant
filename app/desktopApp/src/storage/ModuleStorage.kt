@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.NonEmptyList
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import arrow.core.toNonEmptyListOrNull
 import com.estebandacosta.jdrassistant.core.module.Module
 import com.estebandacosta.jdrassistant.core.module.ModuleError
 import com.estebandacosta.jdrassistant.core.module.decodeModule
@@ -40,6 +41,9 @@ sealed interface InstalledModule {
 
     /** Dossier refusé, pour la raison [error]. */
     data class Invalid(override val folder: Path, val error: ModuleFolderError) : InstalledModule
+
+    /** Module valide mais écarté : son id est aussi déclaré par les dossiers [others]. */
+    data class Duplicate(override val folder: Path, val module: Module, val others: NonEmptyList<Path>) : InstalledModule
 }
 
 /** Le dossier des modules [root] n'a pas pu être parcouru, pour la raison [cause]. */
@@ -51,7 +55,10 @@ object ModuleStorage {
     const val KINDS = "kinds.json"
     const val COMPENDIUM = "compendium"
 
-    /** Lit chaque sous-dossier de [root], triés par nom ; un dossier [root] absent ne contient aucun module. */
+    /**
+     * Lit chaque sous-dossier de [root], triés par nom ; un dossier [root] absent ne contient aucun module.
+     * Les modules chargés qui partagent un id sont tous écartés.
+     */
     suspend fun scan(root: Path): Either<ScanFailed, List<InstalledModule>> = withContext(Dispatchers.IO) {
         either {
             if (!root.exists()) return@either emptyList()
@@ -60,9 +67,19 @@ object ModuleStorage {
             } catch (e: IOException) {
                 raise(ScanFailed(root, e))
             }
-            folders.map { folder ->
+            val installed = folders.map { folder ->
                 read(folder).fold({ InstalledModule.Invalid(folder, it) }, { InstalledModule.Loaded(folder, it) })
             }
+            markDuplicates(installed)
+        }
+    }
+
+    private fun markDuplicates(installed: List<InstalledModule>): List<InstalledModule> {
+        val foldersById = installed.filterIsInstance<InstalledModule.Loaded>().groupBy({ it.module.manifest.id }, { it.folder })
+        return installed.map { entry ->
+            if (entry !is InstalledModule.Loaded) return@map entry
+            val others = foldersById.getValue(entry.module.manifest.id).minusElement(entry.folder).toNonEmptyListOrNull()
+            if (others == null) entry else InstalledModule.Duplicate(entry.folder, entry.module, others)
         }
     }
 
