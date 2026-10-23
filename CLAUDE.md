@@ -44,13 +44,21 @@ Le core doit rester compilable sur **toutes** ses cibles : pas de `java.*` en `s
 
 ### Déroulé des tâches
 
-- **Une US = un ticket YouTrack (projet RPG), découpé en plusieurs étapes.** En commençant une US, créer une branche portant l'id du ticket, de la forme `RPG-<n>-<sujet-court>` (ex. `RPG-38-persistance-elements`), puis préfixer chaque message de commit par cet id (ex. `RPG-38 Écrit le journal des opérations dans l'archive`) pour que YouTrack rattache les commits au ticket.
+- **Une US = un ticket YouTrack (projet RPG), découpé en plusieurs étapes.** En commençant une US, passer son ticket à l'état **In Progress** dans YouTrack sans attendre de demande, puis créer une branche portant l'id du ticket, de la forme `RPG-<n>-<sujet-court>` (ex. `RPG-38-persistance-elements`), puis préfixer chaque message de commit par cet id (ex. `RPG-38 Écrit le journal des opérations dans l'archive`) pour que YouTrack rattache les commits au ticket.
 - **Découper par étape de flux, jamais par fonctionnalité complète.** On construit un mécanisme dans l'ordre où le besoin apparaît, et chaque étape doit expliquer pourquoi la suivante devient nécessaire. Exemple pour les opérations : créer les `Operation`, puis les appliquer à une valeur, puis les refuser proprement, puis les cibler sur un élément, puis les journaliser. Pas de squelette complet d'avance.
 - Chaque étape est **petite, compilable et testée** avant de passer à la suivante. Un test par comportement, nommé en phrase lisible.
 - **Une étape = un chapitre de session + un commit** : ouvrir un chapitre au début de chaque étape, titré `Étape N · <sujet>`, et la clore par un commit. Ce commit n'est fait qu'**après validation de l'étape par l'utilisateur**, jamais dès la fin de l'implémentation : le travail attend sa relecture sur un working tree modifié.
 - **Avant d'écrire** : exposer le choix de conception et ses alternatives en quelques phrases, avec une recommandation. **Après** : un encart pédagogique sur ce que le code illustre. On réfléchit ensemble, l'utilisateur tranche.
 - Pas d'anticipation dans le code : pas de champ, de paramètre ou d'abstraction « au cas où ». Si une étape future en aura besoin, le dire, ne pas le coder.
 - Hors du commit de fin d'étape, ne jamais commiter sans demande explicite. Ne jamais pusher sans demande explicite.
+
+### Design et interface
+
+- Le design de référence vit dans un canvas Design claude.ai : <https://claude.ai/artifact/AoZuc1Nh67SGgsf8ucDBWG> (« Assistant JdR – Desktop & Mobile »), une ligne de maquettes par thème (Fantasy, Sci-fi). Le consulter avant toute étape qui touche l'interface.
+- **Maquette d'abord, code ensuite** : une étape qui ajoute ou change un écran commence par sa maquette dans le canvas, en **Fantasy et Sci-fi** (même si l'app n'implémente que Fantasy), validée par l'utilisateur avant d'écrire le Compose. Le canvas est tenu à jour à chaque étape d'interface.
+- Avant de publier dans le canvas, relire les fichiers concernés : l'utilisateur peut l'avoir retouché à la main. En cas de conflit, réappliquer ses changements sur la version en ligne, ne jamais écraser.
+- Les maquettes sont une **cible** : elles peuvent montrer des éléments pas encore codés. On ne code d'une maquette que ce qui relève de l'étape en cours.
+- En Compose, **factoriser les composants réutilisables** (dans `components/`, couleurs, typographies, gemmes et icônes dans le thème) plutôt que de dupliquer du style dans les écrans ; une valeur de style nouvelle devient un token du thème.
 
 ### Langue et style
 
