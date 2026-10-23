@@ -1,6 +1,7 @@
 product: jvm/app
 
 dependencies:
+  - //core
   - //app/shared
   - //server
   - $compose.desktop.currentOs
