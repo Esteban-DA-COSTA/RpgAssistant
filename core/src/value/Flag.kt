@@ -7,6 +7,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Configuration d'un champ booléen (inspiration, objet harmonisé) ; sans paramètre. */
+@Serializable
+@SerialName("flag")
 data object FlagType : ValueType {
     override fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp> = either {
         ensure(value is FlagValue) { ValueError.ValueMismatch(value) }

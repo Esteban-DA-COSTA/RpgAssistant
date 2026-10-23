@@ -12,6 +12,8 @@ import kotlinx.serialization.Serializable
  * @property min plancher de `current` ; peut être négatif.
  * @property allowTemp le champ accepte une réserve temporaire.
  */
+@Serializable
+@SerialName("resource")
 data class ResourceType(
     val min: Int = 0,
     val allowTemp: Boolean = false,

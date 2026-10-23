@@ -22,7 +22,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | D5 | Modules déclaratifs | **Décidé** | Un type comme « PJ » est une **déclaration** du module (données), pas une sous-classe Kotlin. Les modules ne contiennent pas de code compilé. |
 | D6 | Modules tiers | **Décidé** | N'importe qui peut créer un module de système de jeu (ex. Pathfinder) : schémas, types de personnages, d'objets, de compétences, bibliothèque de contenus **et interfaces** (layout, style, boutons et leurs actions). Le core interprète le module, côté MJ comme côté mobile. |
 | D7 | Modèle de référence | **Décidé** | Inspiré des systèmes Foundry VTT, en moins poussé : pas de logique de calcul ni d'automatisation. |
-| D8 | Noms de format | **Décidé** | Chaque sous-classe sérialisée d'une hiérarchie scellée porte un `@SerialName` explicite et stable, de la forme `famille.membre` : famille en minuscules, puis nom Kotlin en camelCase (`resource.damage`, `resource.setTemp`, `element.unknownField`). Une valeur porte le nom de sa famille seul (`resource`, `flag`). Renommer une classe Kotlin est un refactoring interne ; changer un `@SerialName` est une rupture de format. |
+| D8 | Noms de format | **Décidé** | Chaque sous-classe sérialisée d'une hiérarchie scellée porte un `@SerialName` explicite et stable, de la forme `famille.membre` : famille en minuscules, puis nom Kotlin en camelCase (`resource.damage`, `resource.setTemp`, `element.unknownField`). Une valeur porte le nom de sa famille seul (`resource`, `flag`), et le type de valeur qui la configure porte le même (`{"type": "resource", "min": -10}` dans un Kind). Renommer une classe Kotlin est un refactoring interne ; changer un `@SerialName` est une rupture de format. |
 | D9 | Format de l'état | **Décidé** | Un `World` se sérialise en objet JSON dont les clés sont les `ElementId` : l'identifiant reste hors de l'`Element`, et l'unicité tient à la structure. Le décodage vérifie la structure, pas la conformité aux Kinds : un élément incohérent est refusé à la première opération qui le touche (`UnknownKind`, `MissingValue`, `ValueMismatch`). |
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
@@ -209,6 +209,7 @@ classDiagram
 
 Notes :
 
+- **Champs dans le code actuel** : tant qu'un champ n'a pas d'autre propriété que son type, `Kind.fields` reste une `Map<String, ValueType>`, écrite en JSON `"fields": {"hp": {"type": "resource"}}`. `FieldDef` apparaîtra avec le scope ; le format d'un champ changera alors.
 - **Scope d'un champ** : `INTRINSIC` (vient de la définition : dégâts, description) ou `STATE` (n'existe que dans l'instance : charges restantes, PV actuels).
 - **Composition vs référence** : un sac *contient* une corde (composition, un seul parent, via `Placement`) ; un parchemin *référence* un sort (type de valeur `Reference`).
 - **Objet libre** : un `Element` sans `Placement`, ou placé dans un Element « Lieu » / « Réserve ».
@@ -222,10 +223,13 @@ Chaque `ValueType` se décompose en trois parties :
 - **état** : porté par l'instance, immuable (chaque opération produit un nouvel état) ;
 - **opérations** : seules façons légitimes de faire évoluer l'état ; elles garantissent les invariants.
 
+La configuration et le comportement vivent dans la même classe : la sérialisation n'en encode que les propriétés.
+
 ```kotlin
-interface ValueTypeBehavior<C : Any, S : Any, O : Any> {
-    fun initial(config: C): S
-    fun apply(state: S, op: O, config: C): Result<S>
+@Serializable
+sealed interface ValueType {
+    fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp>  // valide, ou refuse avec une erreur typée
+    fun evolve(value: FieldValue, op: ValueOp): FieldValue                  // applique une opération acceptée
 }
 ```
 

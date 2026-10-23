@@ -9,8 +9,10 @@ import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError
 import com.estebandacosta.jdrassistant.core.element.FieldOp
 import com.estebandacosta.jdrassistant.core.value.ValueType
+import kotlinx.serialization.Serializable
 
 /** Schéma d'un type d'élément déclaré par un module : ses champs et leur type. */
+@Serializable
 data class Kind(
     val id: KindId,
     val fields: Map<String, ValueType>,

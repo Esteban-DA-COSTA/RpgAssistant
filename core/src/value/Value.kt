@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Configuration d'un champ, déclarée par le module. Le catalogue est fermé et défini par le core. */
+@Serializable
 sealed interface ValueType {
     /** Valide [op] sur [value] ; refuse si l'une ou l'autre n'appartient pas à ce type. */
     fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp>
