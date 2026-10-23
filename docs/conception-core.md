@@ -26,6 +26,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | D9 | Format de l'état | **Décidé** | Un `World` se sérialise en objet JSON dont les clés sont les `ElementId` : l'identifiant reste hors de l'`Element`, et l'unicité tient à la structure. Le décodage vérifie la structure, pas la conformité aux Kinds : un élément incohérent est refusé à la première opération qui le touche (`UnknownKind`, `MissingValue`, `ValueMismatch`). |
 | D10 | Kinds d'un module | **Décidé** | Les Kinds d'un module tiennent dans un seul `kinds.json` : une liste de Kinds, chacun portant son `id`. Le chargement décode chaque Kind séparément et rapporte toutes les erreurs d'un coup, repérées par leur position : fichier illisible ou qui n'est pas une liste, Kind mal formé, Kind déclaré plusieurs fois. Une liste plutôt qu'un objet indexé par id, parce qu'une clé JSON en double y serait écrasée sans erreur. |
 | D11 | Opérations sur le monde | **Décidé** | `Operation` est une hiérarchie scellée : `UpdateField` (une opération sur un champ d'un élément) et `CreateElement`. Toutes passent par le même `decide` / `evolve`, le même journal et le même `OperationResult`. Une création porte l'élément **complet**, vérifié par `Kind.validate` : le core ne fournit aucune valeur par défaut, ce rôle revient aux Blueprints. L'`ElementId` est choisi par l'émetteur (application optimiste, rejeu du journal) ; le serveur refuse un id déjà pris. |
+| D12 | Définition → instance | **Décidé** | Instancier un `Blueprint` **copie** ses valeurs dans un nouvel `Element` (`toElement`), créé ensuite par `CreateElement`. L'élément est autonome : un monde relu n'a pas besoin du compendium, et modifier un Blueprint ne change pas les éléments déjà créés. Un Blueprint porte, comme un élément, les valeurs **complètes** de son Kind : `{"id": "dnd5e:goblin", "kind": "dnd5e:npc", "values": {…}}`. La provenance (`Element.origin`) et les enfants viendront quand un besoin les lira. |
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
 | P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
@@ -176,8 +177,7 @@ classDiagram
     class Blueprint {
         +BlueprintId id
         +KindId kind
-        +Map values
-        +Map children
+        +Map~FieldKey, FieldValue~ values
     }
     class Element {
         +ElementId id
@@ -518,7 +518,7 @@ sequenceDiagram
 
 1. **Déclaratif** (socle) : tous les modules, toutes les plateformes.
 2. **Rendu compilé dans l'app** (`Custom`, voir P10) : widgets Compose écrits pour des modules officiels, avec repli déclaratif ; non accessibles aux tiers.
-3. **Script interprété en sandbox** (ex. Redwood/Treehouse) : porte de sortie éventuelle si le déclaratif atteint ses limites, à condition que le script ne produise que des widgets du catalogue et n'émette que des opérations.
+2. **Script interprété en sandbox** (ex. Redwood/Treehouse) : porte de sortie éventuelle si le déclaratif atteint ses limites, à condition que le script ne produise que des widgets du catalogue et n'émette que des opérations.
 
 ### 9.8 Rendu compilé (proposé)
 
@@ -560,13 +560,12 @@ Contraintes :
 ## 11. Questions ouvertes
 
 1. **Noms définitifs** : `Kind` / `Blueprint` / `Element`, rôles `Actor` / `Item` ?
-2. **Définition → instance** : copie complète (snapshot + provenance) ou prototype (l'instance ne stocke que ses overrides) ? Impacte le stockage, la sync et la propagation d'un homebrew modifié.
-3. **Resource** : le max est-il fixé par la définition ou fait-il partie de l'état modifiable par le joueur ?
-4. **Dice, Reference, Asset** : à intégrer au catalogue initial ?
-5. **Blueprints composés** (ex. paquetage d'explorateur) : à l'instanciation, garder le conteneur ou l'éclater dans l'inventaire ?
-6. **Monnaie** : groupe de `Number` sur l'Actor ou objets empilables transférables ?
-7. **Permissions d'écriture** : quels champs un joueur peut-il modifier lui-même ?
-8. **Cas limites** hors périmètre initial : forme sauvage / métamorphose.
-9. **Vocabulaire UI** : liste exacte des primitives de layout, widgets, opérations d'action et tokens de style de la v1.
-10. **Format des fichiers de module** : JSON uniquement, ou YAML accepté pour faciliter l'écriture ?
-11. **Sécurité** : vérification ou signature des modules transmis par le serveur du MJ ?
+2. **Resource** : le max est-il fixé par la définition ou fait-il partie de l'état modifiable par le joueur ?
+3. **Dice, Reference, Asset** : à intégrer au catalogue initial ?
+4. **Blueprints composés** (ex. paquetage d'explorateur) : à l'instanciation, garder le conteneur ou l'éclater dans l'inventaire ?
+5. **Monnaie** : groupe de `Number` sur l'Actor ou objets empilables transférables ?
+6. **Permissions d'écriture** : quels champs un joueur peut-il modifier lui-même ?
+7. **Cas limites** hors périmètre initial : forme sauvage / métamorphose.
+8. **Vocabulaire UI** : liste exacte des primitives de layout, widgets, opérations d'action et tokens de style de la v1.
+9. **Format des fichiers de module** : JSON uniquement, ou YAML accepté pour faciliter l'écriture ?
+10. **Sécurité** : vérification ou signature des modules transmis par le serveur du MJ ?

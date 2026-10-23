@@ -17,3 +17,8 @@ value class ElementId(val value: String)
 @Serializable
 @JvmInline
 value class FieldKey(val value: String)
+
+/** Identifiant stable d'un Blueprint, préfixé par son module (ex. `dnd5e:goblin`). */
+@Serializable
+@JvmInline
+value class BlueprintId(val value: String)
