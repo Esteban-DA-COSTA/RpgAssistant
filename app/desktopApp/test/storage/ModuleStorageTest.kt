@@ -2,6 +2,7 @@ package com.estebandacosta.jdrassistant.storage
 
 import arrow.core.left
 import arrow.core.nonEmptyListOf
+import arrow.core.right
 import com.estebandacosta.jdrassistant.core.BlueprintId
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.ModuleId
@@ -19,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalPathApi::class)
@@ -96,6 +98,47 @@ class ModuleStorageTest {
         write("module.json" to manifest, "kinds.json" to kinds, "compendium" to "un fichier, pas un dossier")
 
         assertIs<ModuleFolderError.ReadFailed>(ModuleStorage.read(folder).leftOrNull())
+    }
+
+    @Test
+    fun `liste chaque sous-dossier du dossier des modules, triés par nom`() = runBlocking {
+        write("zeta/module.json" to manifest, "zeta/kinds.json" to kinds)
+        write("alpha/module.json" to manifest, "alpha/kinds.json" to kinds)
+
+        val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
+
+        assertEquals(listOf(folder.resolve("alpha"), folder.resolve("zeta")), installed.map { it.folder })
+        assertTrue(installed.all { it is InstalledModule.Loaded })
+    }
+
+    @Test
+    fun `un module refusé est listé sans empêcher le chargement des autres`() = runBlocking<Unit> {
+        write("alpha/kinds.json" to kinds)
+        write("beta/module.json" to manifest, "beta/kinds.json" to kinds)
+
+        val installed = assertNotNull(ModuleStorage.scan(folder).getOrNull())
+
+        assertEquals(InstalledModule.Invalid(folder.resolve("alpha"), ModuleFolderError.MissingFile("module.json")), installed[0])
+        assertIs<InstalledModule.Loaded>(installed[1])
+    }
+
+    @Test
+    fun `ignore les fichiers posés à la racine du dossier des modules`() = runBlocking {
+        write("notes.txt" to "pas un module", "alpha/module.json" to manifest, "alpha/kinds.json" to kinds)
+
+        assertEquals(listOf(folder.resolve("alpha")), ModuleStorage.scan(folder).getOrNull()?.map { it.folder })
+    }
+
+    @Test
+    fun `un dossier des modules absent ne contient aucun module`() = runBlocking {
+        assertEquals(emptyList<InstalledModule>().right(), ModuleStorage.scan(folder.resolve("absent")))
+    }
+
+    @Test
+    fun `signale un dossier des modules illisible`() = runBlocking<Unit> {
+        write("modules" to "un fichier, pas un dossier")
+
+        assertIs<ScanFailed>(ModuleStorage.scan(folder.resolve("modules")).leftOrNull())
     }
 
     private fun write(vararg files: Pair<String, String>) {

@@ -11,6 +11,7 @@ import java.io.IOException
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
@@ -30,11 +31,40 @@ sealed interface ModuleFolderError {
     data class Rejected(val errors: NonEmptyList<ModuleError>) : ModuleFolderError
 }
 
+/** Module trouvé dans le sous-dossier [folder] du dossier des modules. */
+sealed interface InstalledModule {
+    val folder: Path
+
+    /** Module chargé et vérifié. */
+    data class Loaded(override val folder: Path, val module: Module) : InstalledModule
+
+    /** Dossier refusé, pour la raison [error]. */
+    data class Invalid(override val folder: Path, val error: ModuleFolderError) : InstalledModule
+}
+
+/** Le dossier des modules [root] n'a pas pu être parcouru, pour la raison [cause]. */
+class ScanFailed(val root: Path, val cause: IOException)
+
 /** Lecture des modules sur le disque, chacun dans son dossier. */
 object ModuleStorage {
     const val MANIFEST = "module.json"
     const val KINDS = "kinds.json"
     const val COMPENDIUM = "compendium"
+
+    /** Lit chaque sous-dossier de [root], triés par nom ; un dossier [root] absent ne contient aucun module. */
+    suspend fun scan(root: Path): Either<ScanFailed, List<InstalledModule>> = withContext(Dispatchers.IO) {
+        either {
+            if (!root.exists()) return@either emptyList()
+            val folders = try {
+                root.listDirectoryEntries().filter { it.isDirectory() }.sortedBy { it.name }
+            } catch (e: IOException) {
+                raise(ScanFailed(root, e))
+            }
+            folders.map { folder ->
+                read(folder).fold({ InstalledModule.Invalid(folder, it) }, { InstalledModule.Loaded(folder, it) })
+            }
+        }
+    }
 
     /** Lit le module du dossier [folder] ; les fichiers du compendium sont repérés par `compendium/<nom>.json`. */
     suspend fun read(folder: Path): Either<ModuleFolderError, Module> = withContext(Dispatchers.IO) {
