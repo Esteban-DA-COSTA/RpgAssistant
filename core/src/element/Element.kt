@@ -1,5 +1,6 @@
 package com.estebandacosta.jdrassistant.core.element
 
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.value.FieldValue
 import com.estebandacosta.jdrassistant.core.value.ValueError
@@ -11,13 +12,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Element(
     val kind: KindId,
-    val values: Map<String, FieldValue>,
+    val values: Map<FieldKey, FieldValue>,
 )
 
 /** Opération [op] ciblée sur le champ [field] d'un élément. */
 @Serializable
 data class FieldOp(
-    val field: String,
+    val field: FieldKey,
     val op: ValueOp,
 )
 
@@ -32,20 +33,20 @@ sealed interface ElementError {
     /** Le Kind ne déclare pas de champ [field]. */
     @Serializable
     @SerialName("element.unknownField")
-    data class UnknownField(val field: String) : ElementError
+    data class UnknownField(val field: FieldKey) : ElementError
 
     /** L'élément n'a pas de valeur pour le champ déclaré [field]. */
     @Serializable
     @SerialName("element.missingValue")
-    data class MissingValue(val field: String) : ElementError
+    data class MissingValue(val field: FieldKey) : ElementError
 
     /** Le type du champ [field] refuse l'opération, pour la raison [cause]. */
     @Serializable
     @SerialName("element.invalidOperation")
-    data class InvalidOperation(val field: String, val cause: ValueError) : ElementError
+    data class InvalidOperation(val field: FieldKey, val cause: ValueError) : ElementError
 
     /** Le type du champ [field] refuse sa valeur, pour la raison [cause]. */
     @Serializable
     @SerialName("element.invalidValue")
-    data class InvalidValue(val field: String, val cause: ValueError) : ElementError
+    data class InvalidValue(val field: FieldKey, val cause: ValueError) : ElementError
 }

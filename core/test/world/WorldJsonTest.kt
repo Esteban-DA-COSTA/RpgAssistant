@@ -1,6 +1,7 @@
 package com.estebandacosta.jdrassistant.core.world
 
 import com.estebandacosta.jdrassistant.core.ElementId
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.value.FlagValue
@@ -14,13 +15,13 @@ import kotlin.test.assertFailsWith
 class WorldJsonTest {
 
     private val pc = KindId("test:pc")
-    private val thorin = Element(pc, mapOf("hp" to ResourceValue(current = 12, max = 20)))
+    private val thorin = Element(pc, mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20)))
 
     @Test
     fun `an element encodes its kind and its typed values`() {
         val element = Element(
             pc,
-            mapOf("hp" to ResourceValue(current = 12, max = 20, temp = 3), "inspired" to FlagValue(true)),
+            mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20, temp = 3), FieldKey("inspired") to FlagValue(true)),
         )
         assertEquals(
             """{"kind":"test:pc","values":{""" +
@@ -46,7 +47,7 @@ class WorldJsonTest {
                 ElementId("thorin") to thorin,
                 ElementId("gob-1") to Element(
                     KindId("test:npc"),
-                    mapOf("hp" to ResourceValue(current = 0, max = 7, temp = 2), "fleeing" to FlagValue(false)),
+                    mapOf(FieldKey("hp") to ResourceValue(current = 0, max = 7, temp = 2), FieldKey("fleeing") to FlagValue(false)),
                 ),
             ),
         )

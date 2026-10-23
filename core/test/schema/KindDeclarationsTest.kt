@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.nonEmptyListOf
 import arrow.core.right
 import com.estebandacosta.jdrassistant.core.ElementId
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.FieldOp
@@ -35,13 +36,13 @@ class KindDeclarationsTest {
         val gob = ElementId("gob-1")
         val world = World(
             mapOf(
-                thorin to Element(KindId("test:pc"), mapOf("hp" to ResourceValue(current = 12, max = 20))),
-                gob to Element(KindId("test:npc"), mapOf("fleeing" to FlagValue(false))),
+                thorin to Element(KindId("test:pc"), mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20))),
+                gob to Element(KindId("test:npc"), mapOf(FieldKey("fleeing") to FlagValue(false))),
             ),
         )
         val ops = listOf(
-            Operation(thorin, FieldOp("hp", ResourceOp.Damage(5))),
-            Operation(gob, FieldOp("fleeing", FlagOp.Set(true))),
+            Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(5))),
+            Operation(gob, FieldOp(FieldKey("fleeing"), FlagOp.Set(true))),
         )
 
         ops.forEach { assertEquals(it.right(), registry.decide(world, it)) }

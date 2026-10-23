@@ -42,6 +42,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 |-------|------|----|
 | `Kind` | Schéma d'un type : rôle, champs, slots | Déclaré par un module |
 | `FieldDef` | Déclaration d'un champ : clé, `ValueType` + configuration, scope | Dans un `Kind` |
+| `FieldKey` | Clé d'un champ (`hp`), unique à l'intérieur de son `Kind` seulement : contrairement à `KindId` et `ElementId`, elle ne désigne rien seule | Dans un `Kind` et un `Element` |
 | `SlotDef` | Collection d'enfants typés + attributs de lien | Dans un `Kind` |
 | `ValueType` | Type de valeur : configuration, état, opérations | Core |
 | `FieldValue` | État d'un champ dans une instance | Core |
@@ -155,7 +156,7 @@ classDiagram
         +List~SlotDef~ slots
     }
     class FieldDef {
-        +String key
+        +FieldKey key
         +ValueType type
         +Scope scope
         +Visibility defaultVisibility
@@ -181,14 +182,14 @@ classDiagram
         +ElementId id
         +KindId kind
         +Origin? origin
-        +Map~String, FieldValue~ values
+        +Map~FieldKey, FieldValue~ values
         +Placement? placement
         +PlayerId? controller
     }
     class Placement {
         +ElementId parent
         +String slot
-        +Map~String, FieldValue~ linkValues
+        +Map~FieldKey, FieldValue~ linkValues
     }
     class Operation {
         <<sealed>>
@@ -210,7 +211,7 @@ classDiagram
 
 Notes :
 
-- **Champs dans le code actuel** : tant qu'un champ n'a pas d'autre propriété que son type, `Kind.fields` reste une `Map<String, ValueType>`, écrite en JSON `"fields": {"hp": {"type": "resource"}}`. `FieldDef` apparaîtra avec le scope ; le format d'un champ changera alors.
+- **Champs dans le code actuel** : tant qu'un champ n'a pas d'autre propriété que son type, `Kind.fields` reste une `Map<FieldKey, ValueType>`, écrite en JSON `"fields": {"hp": {"type": "resource"}}`. `FieldDef` apparaîtra avec le scope ; le format d'un champ changera alors.
 - **Scope d'un champ** : `INTRINSIC` (vient de la définition : dégâts, description) ou `STATE` (n'existe que dans l'instance : charges restantes, PV actuels).
 - **Composition vs référence** : un sac *contient* une corde (composition, un seul parent, via `Placement`) ; un parchemin *référence* un sort (type de valeur `Reference`).
 - **Objet libre** : un `Element` sans `Placement`, ou placé dans un Element « Lieu » / « Réserve ».
@@ -465,7 +466,7 @@ sealed interface LayoutNode {
     data class Grid(val columns: Int, val children: List<LayoutNode>) : LayoutNode
     data class Tabs(val tabs: List<Tab>) : LayoutNode
     data class Section(val title: String, val children: List<LayoutNode>) : LayoutNode
-    data class Field(val key: String, val display: DisplayHint? = null) : LayoutNode
+    data class Field(val key: FieldKey, val display: DisplayHint? = null) : LayoutNode
     data class SlotList(val slot: String, val itemLayout: LayoutRef, val groupBy: String? = null) : LayoutNode
     data class Button(val label: String, val style: String?, val actions: List<ActionDef>) : LayoutNode
     data class Label(val text: String) : LayoutNode

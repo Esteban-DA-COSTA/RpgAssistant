@@ -7,6 +7,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError
@@ -18,7 +19,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Kind(
     val id: KindId,
-    val fields: Map<String, ValueType>,
+    val fields: Map<FieldKey, ValueType>,
 ) {
     /** Vérifie que [element] est conforme à ce Kind ; renvoie toutes les erreurs de ses champs, ou l'élément. */
     fun validate(element: Element): Either<NonEmptyList<ElementError>, Element> = either {

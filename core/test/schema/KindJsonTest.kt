@@ -1,5 +1,6 @@
 package com.estebandacosta.jdrassistant.core.schema
 
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.value.FlagType
 import com.estebandacosta.jdrassistant.core.value.ResourceType
@@ -23,7 +24,7 @@ class KindJsonTest {
             }
         """
         assertEquals(
-            Kind(KindId("dnd5e:pc"), mapOf("hp" to ResourceType(min = -10, allowTemp = true), "inspired" to FlagType)),
+            Kind(KindId("dnd5e:pc"), mapOf(FieldKey("hp") to ResourceType(min = -10, allowTemp = true), FieldKey("inspired") to FlagType)),
             Json.decodeFromString<Kind>(json),
         )
     }
@@ -31,7 +32,7 @@ class KindJsonTest {
     @Test
     fun `a field type left unconfigured takes its defaults`() {
         val json = """{"id":"dnd5e:pc","fields":{"hp":{"type":"resource"}}}"""
-        assertEquals(mapOf("hp" to ResourceType()), Json.decodeFromString<Kind>(json).fields)
+        assertEquals(mapOf(FieldKey("hp") to ResourceType()), Json.decodeFromString<Kind>(json).fields)
     }
 
     @Test

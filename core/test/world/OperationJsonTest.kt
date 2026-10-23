@@ -1,6 +1,7 @@
 package com.estebandacosta.jdrassistant.core.world
 
 import com.estebandacosta.jdrassistant.core.ElementId
+import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError.InvalidOperation
@@ -24,7 +25,7 @@ import kotlin.test.assertFailsWith
 class OperationJsonTest {
 
     private val thorin = ElementId("thorin")
-    private val damage = Operation(thorin, FieldOp("hp", ResourceOp.Damage(5)))
+    private val damage = Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(5)))
 
     @Test
     fun `an operation encodes with stable type names`() {
@@ -36,7 +37,7 @@ class OperationJsonTest {
 
     @Test
     fun `an operation without parameters encodes as its type alone`() {
-        val reset = Operation(thorin, FieldOp("hp", ResourceOp.Reset))
+        val reset = Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Reset))
         assertEquals(
             """{"target":"thorin","fieldOp":{"field":"hp","op":{"type":"resource.reset"}}}""",
             Json.encodeToString(reset),
@@ -52,7 +53,7 @@ class OperationJsonTest {
             ResourceOp.SetMax(25),
             ResourceOp.Reset,
             FlagOp.Set(true),
-        ).map { Operation(thorin, FieldOp("field", it)) }
+        ).map { Operation(thorin, FieldOp(FieldKey("field"), it)) }
 
         ops.forEach { assertEquals(it, Json.decodeFromString<Operation>(Json.encodeToString(it))) }
     }
@@ -66,8 +67,8 @@ class OperationJsonTest {
     @Test
     fun `a rejection carries the full reason`() {
         val result: OperationResult = Rejected(
-            op = Operation(thorin, FieldOp("hp", ResourceOp.Damage(-5))),
-            reason = InvalidOnElement(thorin, InvalidOperation("hp", NegativeAmount(-5))),
+            op = Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(-5))),
+            reason = InvalidOnElement(thorin, InvalidOperation(FieldKey("hp"), NegativeAmount(-5))),
         )
         assertEquals(
             """{"type":"operation.rejected",""" +
@@ -82,9 +83,9 @@ class OperationJsonTest {
     @Test
     fun `a server decision reaches the client intact`() {
         val pc = KindId("test:pc")
-        val registry = KindRegistry(listOf(Kind(pc, mapOf("hp" to ResourceType()))))
-        val world = World(mapOf(thorin to Element(pc, mapOf("hp" to ResourceValue(current = 12, max = 20)))))
-        val incoming = listOf(damage, Operation(thorin, FieldOp("hp", ResourceOp.Damage(-5))))
+        val registry = KindRegistry(listOf(Kind(pc, mapOf(FieldKey("hp") to ResourceType()))))
+        val world = World(mapOf(thorin to Element(pc, mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20)))))
+        val incoming = listOf(damage, Operation(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(-5))))
 
         val sent: List<OperationResult> = incoming.map { op ->
             registry.decide(world, op).fold({ Rejected(op, it) }, { Accepted(it) })

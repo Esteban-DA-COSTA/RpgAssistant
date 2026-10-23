@@ -12,3 +12,8 @@ value class KindId(val value: String)
 @Serializable
 @JvmInline
 value class ElementId(val value: String)
+
+/** Clé d'un champ, unique à l'intérieur de son Kind seulement (ex. `hp`). */
+@Serializable
+@JvmInline
+value class FieldKey(val value: String)
