@@ -26,6 +26,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
 | P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
+| P10 | Rendu compilé | Proposé | Un module reste toujours déclaratif. L'app peut embarquer en plus un **rendu compilé** (widgets Compose) pour certains modules officiels, inséré dans un layout par un nœud `Custom` avec un repli déclaratif obligatoire. Ce rendu ne fait qu'afficher et émettre des opérations (voir section 9.7). |
 | P1 | Trois niveaux | Proposé | Type (`Kind`, fourni par le module) → définition (`Blueprint`, compendium) → instance (`Element`, monde). |
 | P2 | Modèle unifié | Proposé | Une seule structure (`Element`) ; la distinction « Actor / Item » est un **rôle** porté par le `Kind`, pas deux modèles distincts. |
 | P3 | Slots et attributs de lien | Proposé | Les enfants sont rangés dans des slots typés (inventaire, sorts, capacités…). Les attributs de la relation (équipé, préparé, quantité) sont portés par le `Placement`, pas par l'objet. |
@@ -466,6 +467,7 @@ sealed interface LayoutNode {
     data class SlotList(val slot: String, val itemLayout: LayoutRef, val groupBy: String? = null) : LayoutNode
     data class Button(val label: String, val style: String?, val actions: List<ActionDef>) : LayoutNode
     data class Label(val text: String) : LayoutNode
+    data class Custom(val id: String, val fallback: LayoutNode) : LayoutNode
 }
 
 @Composable
@@ -511,8 +513,35 @@ sequenceDiagram
 ### 9.7 Niveaux d'extensibilité
 
 1. **Déclaratif** (socle) : tous les modules, toutes les plateformes.
-2. **Écrans compilés dans l'app** (`Custom`) : possibles pour des modules officiels, avec repli générique ; non accessibles aux tiers.
+2. **Rendu compilé dans l'app** (`Custom`, voir P10) : widgets Compose écrits pour des modules officiels, avec repli déclaratif ; non accessibles aux tiers.
 3. **Script interprété en sandbox** (ex. Redwood/Treehouse) : porte de sortie éventuelle si le déclaratif atteint ses limites, à condition que le script ne produise que des widgets du catalogue et n'émette que des opérations.
+
+### 9.8 Rendu compilé (proposé)
+
+Certaines interfaces (grimoire avec préparation de sorts, glisser-déposer, visualisations propres à un système) sont difficiles à décrire en données. L'app peut alors embarquer un rendu compilé pour un module officiel comme D&D.
+
+Ce n'est pas un second type de module : le module reste un paquet déclaratif complet, et le rendu compilé est une **couche optionnelle** fournie par l'app.
+
+```json
+{
+  "type": "Custom",
+  "id": "dnd5e.spellbook",
+  "fallback": { "type": "SlotList", "slot": "spells", "itemLayout": "spell.compact" }
+}
+```
+
+Règles :
+
+- **Modèle inchangé** : Kinds, Blueprints, valeurs et opérations viennent du module et du catalogue du core. Le serveur, la validation et la synchronisation ignorent l'existence du rendu compilé.
+- **Affichage et opérations seulement** : un rendu compilé reçoit l'état en lecture et `dispatch(Operation)`, comme un widget générique. Il ne calcule rien (voir P6) et ne contourne pas la validation du serveur.
+- **Repli obligatoire** : un nœud `Custom` porte toujours un `fallback` déclaratif. Le module reste utilisable sans le code compilé (app pas à jour, système repris par un tiers).
+- **Grain du widget** : `Custom` remplace une partie d'un layout, pas une fiche entière. Le reste de l'interface reste déclaratif.
+
+Contraintes :
+
+- Le rendu compilé fait partie du binaire de chaque app (desktop, Android, iOS) : il ne voyage pas depuis le serveur du MJ (voir 9.1), et le faire évoluer demande une nouvelle version de l'app.
+- Il est écrit en Compose Multiplatform dans un module dédié (ex. `modules/dnd5e-ui`) dont dépend `app/shared`, une fois pour toutes les plateformes.
+- Un besoin couvert par `Custom` qui s'avère générique a vocation à devenir une primitive du vocabulaire déclaratif, disponible pour tous les modules.
 
 ## 10. Composants à prévoir (proposé)
 
@@ -536,5 +565,4 @@ sequenceDiagram
 8. **Cas limites** hors périmètre initial : forme sauvage / métamorphose.
 9. **Vocabulaire UI** : liste exacte des primitives de layout, widgets, opérations d'action et tokens de style de la v1.
 10. **Format des fichiers de module** : JSON uniquement, ou YAML accepté pour faciliter l'écriture ?
-11. **Écrans `Custom`** : les conserver pour les modules officiels, ou tout faire passer par le déclaratif pour garantir l'égalité entre modules officiels et tiers ?
-12. **Sécurité** : vérification ou signature des modules transmis par le serveur du MJ ?
+11. **Sécurité** : vérification ou signature des modules transmis par le serveur du MJ ?
