@@ -10,6 +10,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("flag")
 data object FlagType : ValueType {
+    override fun validate(value: FieldValue): Either<ValueError, FieldValue> = either {
+        ensure(value is FlagValue) { ValueError.ValueMismatch(value) }
+        value
+    }
+
     override fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp> = either {
         ensure(value is FlagValue) { ValueError.ValueMismatch(value) }
         ensure(op is FlagOp) { ValueError.OpMismatch(op) }

@@ -18,6 +18,15 @@ data class ResourceType(
     val min: Int = 0,
     val allowTemp: Boolean = false,
 ) : ValueType {
+    override fun validate(value: FieldValue): Either<ValueError, FieldValue> = either {
+        ensure(value is ResourceValue) { ValueError.ValueMismatch(value) }
+        ensure(value.max >= min) { ResourceError.MaxBelowMin(value.max, min) }
+        ensure(value.current in min..value.max) { ResourceError.CurrentOutOfRange(value.current, min, value.max) }
+        ensure(value.temp >= 0) { ResourceError.NegativeTemp(value.temp) }
+        ensure(allowTemp || value.temp == 0) { ResourceError.TempNotAllowed }
+        value
+    }
+
     override fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp> = either {
         ensure(value is ResourceValue) { ValueError.ValueMismatch(value) }
         ensure(op is ResourceOp) { ValueError.OpMismatch(op) }
@@ -94,7 +103,7 @@ sealed interface ResourceOp : ValueOp {
     data object Reset : ResourceOp
 }
 
-/** Raisons propres aux ressources pour lesquelles [ResourceType.decide] refuse une opération. */
+/** Raisons propres aux ressources pour lesquelles [ResourceType] refuse une valeur ou une opération. */
 @Serializable
 sealed interface ResourceError : ValueError {
     /** Un montant doit être positif ou nul. */
@@ -111,4 +120,14 @@ sealed interface ResourceError : ValueError {
     @Serializable
     @SerialName("resource.tempNotAllowed")
     data object TempNotAllowed : ResourceError
+
+    /** Le courant [current] sort de l'intervalle [min]..[max]. */
+    @Serializable
+    @SerialName("resource.currentOutOfRange")
+    data class CurrentOutOfRange(val current: Int, val min: Int, val max: Int) : ResourceError
+
+    /** La réserve temporaire [temp] est négative. */
+    @Serializable
+    @SerialName("resource.negativeTemp")
+    data class NegativeTemp(val temp: Int) : ResourceError
 }

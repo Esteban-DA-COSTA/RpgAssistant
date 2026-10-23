@@ -43,4 +43,9 @@ sealed interface ElementError {
     @Serializable
     @SerialName("element.invalidOperation")
     data class InvalidOperation(val field: String, val cause: ValueError) : ElementError
+
+    /** Le type du champ [field] refuse sa valeur, pour la raison [cause]. */
+    @Serializable
+    @SerialName("element.invalidValue")
+    data class InvalidValue(val field: String, val cause: ValueError) : ElementError
 }

@@ -229,6 +229,7 @@ La configuration et le comportement vivent dans la même classe : la sérialisat
 ```kotlin
 @Serializable
 sealed interface ValueType {
+    fun validate(value: FieldValue): Either<ValueError, FieldValue>        // établit les invariants d'une valeur reçue
     fun decide(value: FieldValue, op: ValueOp): Either<ValueError, ValueOp>  // valide, ou refuse avec une erreur typée
     fun evolve(value: FieldValue, op: ValueOp): FieldValue                  // applique une opération acceptée
 }

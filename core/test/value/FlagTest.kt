@@ -40,6 +40,17 @@ class FlagTest {
     }
 
     @Test
+    fun `validation accepts a flag value`() {
+        assertEquals(off.right(), FlagType.validate(off))
+    }
+
+    @Test
+    fun `validation refuses a value of another type`() {
+        val hp = ResourceValue(current = 12, max = 20)
+        assertEquals(ValueMismatch(hp).left(), FlagType.validate(hp))
+    }
+
+    @Test
     fun `evolve rejects an operation that decide would have refused`() {
         assertFailsWith<IllegalStateException> { FlagType.evolve(off, Damage(1)) }
     }
