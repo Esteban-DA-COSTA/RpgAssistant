@@ -5,6 +5,7 @@ import com.estebandacosta.jdrassistant.core.BlueprintId
 import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.ModuleId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.FieldOp
 import com.estebandacosta.jdrassistant.core.schema.Kind
@@ -23,6 +24,7 @@ import kotlin.test.assertEquals
 class BlueprintTest {
 
     private val npcId = KindId("test:npc")
+    private val emptyWorld = World(ModuleId("test"))
     private val registry = KindRegistry(
         listOf(Kind(npcId, mapOf(FieldKey("hp") to ResourceType(), FieldKey("fleeing") to FlagType))),
     )
@@ -62,7 +64,7 @@ class BlueprintTest {
             Operation.UpdateField(first, FieldOp(FieldKey("hp"), Damage(5))),
         )
 
-        val world = journal.fold(World(), registry::evolve)
+        val world = journal.fold(emptyWorld, registry::evolve)
 
         assertEquals(ResourceValue(current = 2, max = 7), world.elements.getValue(first).values[FieldKey("hp")])
         assertEquals(ResourceValue(current = 7, max = 7), world.elements.getValue(second).values[FieldKey("hp")])
@@ -72,6 +74,6 @@ class BlueprintTest {
     @Test
     fun `an instantiated element is created by the existing operation`() {
         val create = Operation.CreateElement(ElementId("gob-1"), goblin.toElement())
-        assertEquals(create.right(), registry.decide(World(), create))
+        assertEquals(create.right(), registry.decide(emptyWorld, create))
     }
 }

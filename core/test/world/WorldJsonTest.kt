@@ -3,6 +3,7 @@ package com.estebandacosta.jdrassistant.core.world
 import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.ModuleId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.value.FlagValue
 import com.estebandacosta.jdrassistant.core.value.ResourceValue
@@ -33,9 +34,9 @@ class WorldJsonTest {
 
     @Test
     fun `a world encodes its elements keyed by their id`() {
-        val world = World(mapOf(ElementId("thorin") to thorin))
+        val world = World(ModuleId("test"), mapOf(ElementId("thorin") to thorin))
         assertEquals(
-            """{"elements":{"thorin":{"kind":"test:pc","values":{"hp":{"type":"resource","current":12,"max":20}}}}}""",
+            """{"module":"test","elements":{"thorin":{"kind":"test:pc","values":{"hp":{"type":"resource","current":12,"max":20}}}}}""",
             Json.encodeToString(world),
         )
     }
@@ -43,6 +44,7 @@ class WorldJsonTest {
     @Test
     fun `a world decodes back to itself`() {
         val world = World(
+            ModuleId("test"),
             mapOf(
                 ElementId("thorin") to thorin,
                 ElementId("gob-1") to Element(
@@ -56,7 +58,7 @@ class WorldJsonTest {
 
     @Test
     fun `a value of unknown type is rejected when decoding`() {
-        val json = """{"elements":{"thorin":{"kind":"test:pc","values":{"hp":{"type":"mana","current":3}}}}}"""
+        val json = """{"module":"test","elements":{"thorin":{"kind":"test:pc","values":{"hp":{"type":"mana","current":3}}}}}"""
         assertFailsWith<SerializationException> { Json.decodeFromString<World>(json) }
     }
 }

@@ -4,6 +4,7 @@ import arrow.core.nonEmptyListOf
 import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.ModuleId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError.InvalidOperation
 import com.estebandacosta.jdrassistant.core.element.ElementError.MissingValue
@@ -118,7 +119,7 @@ class OperationJsonTest {
     fun `a server decision reaches the client intact`() {
         val pc = KindId("test:pc")
         val registry = KindRegistry(listOf(Kind(pc, mapOf(FieldKey("hp") to ResourceType()))))
-        val world = World(mapOf(thorin to Element(pc, mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20)))))
+        val world = World(ModuleId("test"), mapOf(thorin to Element(pc, mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20)))))
         val incoming = listOf(damage, Operation.UpdateField(thorin, FieldOp(FieldKey("hp"), ResourceOp.Damage(-5))))
 
         val sent: List<OperationResult> = incoming.map { op ->

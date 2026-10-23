@@ -6,6 +6,7 @@ import arrow.core.right
 import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.ModuleId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.ElementError.InvalidOperation
 import com.estebandacosta.jdrassistant.core.element.FieldOp
@@ -36,6 +37,7 @@ class KindRegistryTest {
     private val thorin = ElementId("thorin")
     private val wand = ElementId("wand")
     private val world = World(
+        ModuleId("test"),
         mapOf(
             thorin to Element(pcId, mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20))),
             wand to Element(itemId, mapOf(FieldKey("charges") to ResourceValue(current = 5, max = 7))),
@@ -64,7 +66,7 @@ class KindRegistryTest {
     @Test
     fun `an element whose kind is not loaded is refused`() {
         val orc = ElementId("orc")
-        val withOrc = World(world.elements + (orc to Element(KindId("test:monster"), emptyMap())))
+        val withOrc = world.copy(elements = world.elements + (orc to Element(KindId("test:monster"), emptyMap())))
         val expected = UnknownKind(orc, KindId("test:monster"))
         assertEquals(expected.left(), registry.decide(withOrc, Operation.UpdateField(orc, FieldOp(FieldKey("hp"), Damage(1)))))
     }

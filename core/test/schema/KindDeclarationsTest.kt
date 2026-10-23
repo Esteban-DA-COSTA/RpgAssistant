@@ -6,6 +6,7 @@ import arrow.core.right
 import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.FieldKey
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.ModuleId
 import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.element.FieldOp
 import com.estebandacosta.jdrassistant.core.schema.KindDeclarationError.DuplicateKind
@@ -35,6 +36,7 @@ class KindDeclarationsTest {
         val thorin = ElementId("thorin")
         val gob = ElementId("gob-1")
         val world = World(
+            ModuleId("test"),
             mapOf(
                 thorin to Element(KindId("test:pc"), mapOf(FieldKey("hp") to ResourceValue(current = 12, max = 20))),
                 gob to Element(KindId("test:npc"), mapOf(FieldKey("fleeing") to FlagValue(false))),

@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import com.estebandacosta.jdrassistant.core.ElementId
 import com.estebandacosta.jdrassistant.core.KindId
+import com.estebandacosta.jdrassistant.core.element.Element
 import com.estebandacosta.jdrassistant.core.world.Operation
 import com.estebandacosta.jdrassistant.core.world.World
 import com.estebandacosta.jdrassistant.core.world.WorldError
@@ -32,11 +34,16 @@ class KindRegistry(kinds: Iterable<Kind>) {
             }
             is Operation.CreateElement -> {
                 ensure(op.id !in world.elements) { WorldError.ElementAlreadyExists(op.id) }
-                val kind = ensureNotNull(byId[op.element.kind]) { WorldError.UnknownKind(op.id, op.element.kind) }
-                kind.validate(op.element).mapLeft { WorldError.NonConformingElement(op.id, it) }.bind()
+                validate(op.id, op.element).bind()
             }
         }
         op
+    }
+
+    /** Vérifie que [element], d'identifiant [id], a un Kind chargé et y est conforme. */
+    fun validate(id: ElementId, element: Element): Either<WorldError, Element> = either {
+        val kind = ensureNotNull(byId[element.kind]) { WorldError.UnknownKind(id, element.kind) }
+        kind.validate(element).mapLeft { WorldError.NonConformingElement(id, it) }.bind()
     }
 
     /**

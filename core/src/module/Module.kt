@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.NonEmptyList
 import arrow.core.flatMap
 import arrow.core.left
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.right
 import arrow.core.toEitherNel
 import arrow.core.toNonEmptyListOrNull
@@ -15,6 +17,8 @@ import com.estebandacosta.jdrassistant.core.blueprint.decodeCompendium
 import com.estebandacosta.jdrassistant.core.schema.KindDeclarationError
 import com.estebandacosta.jdrassistant.core.schema.KindRegistry
 import com.estebandacosta.jdrassistant.core.schema.decodeKinds
+import com.estebandacosta.jdrassistant.core.world.World
+import com.estebandacosta.jdrassistant.core.world.WorldError
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -31,7 +35,24 @@ data class Module(
     val manifest: Manifest,
     val kinds: KindRegistry,
     val compendium: Map<BlueprintId, Blueprint>,
-)
+) {
+    /** Vérifie que [world] relève de ce module et que chacun de ses éléments est conforme à son Kind. */
+    fun validate(world: World): Either<WorldOpeningError, World> = either {
+        ensure(world.module == manifest.id) { WorldOpeningError.ModuleMismatch(expected = world.module, actual = manifest.id) }
+        val errors = world.elements.mapNotNull { (id, element) -> kinds.validate(id, element).leftOrNull() }
+        errors.toNonEmptyListOrNull()?.let { raise(WorldOpeningError.InvalidElements(it)) }
+        world
+    }
+}
+
+/** Raisons pour lesquelles un monde ne s'ouvre pas avec un module. */
+sealed interface WorldOpeningError {
+    /** Le monde relève du module [expected], mais le module chargé est [actual]. */
+    data class ModuleMismatch(val expected: ModuleId, val actual: ModuleId) : WorldOpeningError
+
+    /** Des éléments du monde sont incohérents avec le module, pour les raisons [errors]. */
+    data class InvalidElements(val errors: NonEmptyList<WorldError>) : WorldOpeningError
+}
 
 /** Raisons pour lesquelles un module est refusé. */
 sealed interface ModuleError {
