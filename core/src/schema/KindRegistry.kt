@@ -16,6 +16,9 @@ import com.estebandacosta.jdrassistant.core.world.WorldError
 class KindRegistry(kinds: Iterable<Kind>) {
     private val byId: Map<KindId, Kind> = kinds.associateBy { it.id }
 
+    /** Identifiants des Kinds chargés. */
+    val ids: Set<KindId> get() = byId.keys
+
     /** Kind d'identifiant [id], ou `null` s'il n'est pas chargé. */
     operator fun get(id: KindId): Kind? = byId[id]
 

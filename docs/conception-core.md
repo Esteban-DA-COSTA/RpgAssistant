@@ -28,6 +28,7 @@ N'importe qui peut créer un module pour son système de jeu, à la manière des
 | D11 | Opérations sur le monde | **Décidé** | `Operation` est une hiérarchie scellée : `UpdateField` (une opération sur un champ d'un élément) et `CreateElement`. Toutes passent par le même `decide` / `evolve`, le même journal et le même `OperationResult`. Une création porte l'élément **complet**, vérifié par `Kind.validate` : le core ne fournit aucune valeur par défaut, ce rôle revient aux Blueprints. L'`ElementId` est choisi par l'émetteur (application optimiste, rejeu du journal) ; le serveur refuse un id déjà pris. |
 | D12 | Définition → instance | **Décidé** | Instancier un `Blueprint` **copie** ses valeurs dans un nouvel `Element` (`toElement`), créé ensuite par `CreateElement`. L'élément est autonome : un monde relu n'a pas besoin du compendium, et modifier un Blueprint ne change pas les éléments déjà créés. Un Blueprint porte, comme un élément, les valeurs **complètes** de son Kind : `{"id": "dnd5e:goblin", "kind": "dnd5e:npc", "values": {…}}`. La provenance (`Element.origin`) et les enfants viendront quand un besoin les lira. |
 | D13 | Compendium d'un module | **Décidé** | Les Blueprints d'un module vivent dans `compendium/`, en fichiers aux noms libres : chacun contient une liste de Blueprints, et chaque Blueprint porte son `kind`, donc le rangement est l'affaire de l'auteur. Le chargement décode chaque Blueprint séparément, vérifie que son Kind est chargé et qu'il y est conforme (`Kind.validate`), puis rapporte toutes les erreurs d'un coup, repérées par fichier et position : fichier qui n'est pas une liste, Blueprint mal formé, de Kind inconnu, non conforme, ou déclaré plusieurs fois. |
+| D14 | Chargement d'un module | **Décidé** | Le manifeste `module.json` ne porte que ce qui est lu : `id` (`ModuleId`) et `title`. Chaque id **déclaré** par le module (Kind, Blueprint) commence par `<id du module>:` ; un `kind` référencé par un Blueprint n'est pas concerné. Le manifeste et les Kinds sont lus indépendamment et leurs erreurs réunies ; le compendium n'est vérifié que contre des Kinds valides, pour ne pas noyer la cause sous des `UnknownKind` dérivés ; le préfixe est vérifié sur le module assemblé. Chaque erreur garde le type de sa source, enveloppé dans `ModuleError`. |
 | P7 | UI déclarative riche | Proposé | L'interface d'un module est décrite en données (layout, tokens de style, actions = listes d'opérations, conditions d'affichage, entrées utilisateur). Le core maintient le **vocabulaire**, pas les écrans des modules. |
 | P8 | Distribution | Proposé | Les modules sont téléchargés par le mobile **depuis le serveur PC du MJ** en rejoignant la campagne, sans passer par un store. |
 | P9 | Système / extension | Proposé | Un *système* définit Kinds, layouts et thème ; une *extension* (bestiaire, homebrew) ajoute du contenu et dépend d'un système. |
@@ -402,22 +403,15 @@ pf2e/
     └── icons/
 ```
 
-Manifeste d'un système :
+Manifeste lu aujourd'hui (D14) :
 
 ```json
-{
-  "id": "pf2e",
-  "type": "system",
-  "title": "Pathfinder 2e",
-  "version": "1.2.0",
-  "authors": ["…"],
-  "compatibility": { "core": { "minimum": "1.0", "verified": "1.3" } },
-  "languages": ["fr", "en"],
-  "dependencies": []
-}
+{ "id": "pf2e", "title": "Pathfinder 2e" }
 ```
 
-Manifeste d'une extension (homebrew d'une table) :
+Les autres champs arriveront avec leur premier consommateur : `version` (cache des mobiles), `compatibility` (évolution du core), `type` et `dependencies` (extensions, P9), `authors`, `languages`. Un manifeste qui les contient aujourd'hui est refusé (clé inconnue).
+
+Manifeste d'une extension envisagé (homebrew d'une table, proposé) :
 
 ```json
 {
