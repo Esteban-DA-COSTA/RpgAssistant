@@ -5,7 +5,6 @@ import arrow.core.right
 import com.estebandacosta.jdrassistant.creation.NewWorld
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.attribute.PosixFilePermissions
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -15,7 +14,6 @@ import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.outputStream
 import kotlin.io.path.readText
-import kotlin.io.path.setPosixFilePermissions
 import kotlin.io.path.writeText
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -33,7 +31,6 @@ class WorldStorageTest {
 
     @AfterTest
     fun cleanUp() {
-        parent.setPosixFilePermissions(PosixFilePermissions.fromString("rwx------"))
         parent.deleteRecursively()
     }
 
@@ -67,13 +64,13 @@ class WorldStorageTest {
     }
 
     @Test
-    fun `signale l'échec quand le dossier parent est en lecture seule`() = runBlocking<Unit> {
-        parent.setPosixFilePermissions(PosixFilePermissions.fromString("r-x------"))
+    fun `signale l'échec quand le dossier de destination n'existe pas`() = runBlocking<Unit> {
+        val missing = parent.resolve("absent")
 
-        val created = WorldStorage.create(NewWorld("Valdor", parent))
+        val created = WorldStorage.create(NewWorld("Valdor", missing))
 
         assertIs<WorldStorageError.WriteFailed>(created.leftOrNull())
-        assertFalse(parent.resolve("Valdor.rpga").exists())
+        assertFalse(missing.exists())
     }
 
     @Test
