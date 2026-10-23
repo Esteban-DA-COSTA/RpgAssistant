@@ -23,6 +23,7 @@ Ce doc est la **source de vérité du modèle**. Avant d'implémenter quelque ch
 - Modules : `core` (kmp/lib, cibles jvm, android, iosArm64, iosSimulatorArm64), `app/shared` (Compose Multiplatform), `app/androidApp`, `app/desktopApp`, `app/iosApp` (points d'entrée), `server` (Ktor, bibliothèque JVM démarrée par `desktopApp`).
 - Plateformes visées : **desktop** (PC du MJ), **Android** et **iOS** (joueurs). Pas de version web. Le serveur tourne dans l'app desktop du MJ : il démarre avec elle et s'arrête à la fermeture de la fenêtre.
 - Package racine : `com.estebandacosta.jdrassistant`. Le core vit sous `com.estebandacosta.jdrassistant.core`.
+- Suivi des tickets : projet YouTrack **RPG**, accessible via le serveur MCP `youtrack` (déclaré dans `.mcp.json`, lit `YOUTRACK_URL` et `YOUTRACK_TOKEN` dans l'environnement).
 
 ```bash
 ./kotlin build -m core            # compile le core pour toutes ses plateformes
